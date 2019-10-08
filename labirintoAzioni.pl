@@ -5,7 +5,7 @@ applicabile(est, pos(Riga, Colonna)):-
   Colonna < NC,
   % Controlliamo che la casella a est non sia occupata
   NuovaColonna is Colonna + 1,
-  \+occupato(pos(Riga, NuovaColonna)).
+  \+occupata(pos(Riga, NuovaColonna)).
 
 applicabile(sud, pos(Riga, Colonna)):-
   % Controlliamo di non essere sul bordo inferiore del labirinto
@@ -13,21 +13,21 @@ applicabile(sud, pos(Riga, Colonna)):-
   Riga < NR,
   % Controlliamo che la casella a sud non sia occupata
   NuovaRiga is Riga + 1,
-  \+occupato(pos(NuovaRiga, Colonna)).
+  \+occupata(pos(NuovaRiga, Colonna)).
 
 applicabile(ovest, pos(Riga, Colonna)):-
   % Controlliamo di non essere sul bordo sinistro del labirinto
   Colonna > 1,
   % Controlliamo che la casella a ovest non sia occupata
   NuovaColonna is Colonna - 1,
-  \+occupato(pos(Riga, NuovaColonna)).
+  \+occupata(pos(Riga, NuovaColonna)).
 
 applicabile(nord, pos(Riga, Colonna)):-
   % Controlliamo di non essere sul bordo superiore del labirinto
   Riga > 1,
   % Controlliamo che la casella ad est non sia occupata
   NuovaRiga is Riga + 1,
-  \+occupato(pos(NuovaRiga, Colonna)).
+  \+occupata(pos(NuovaRiga, Colonna)).
 
 %------------------------------------------------------------------
 
