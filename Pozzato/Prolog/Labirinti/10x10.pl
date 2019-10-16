@@ -1,6 +1,4 @@
-/*
-Descrizione della situazione inizale del dominio.
-*/
+% Labirinto 10x10 con singola uscita
 num_righe(10).
 num_colonne(10).
 
@@ -16,8 +14,8 @@ occupata(pos(7,5)).
 occupata(pos(7,1)).
 occupata(pos(7,2)).
 occupata(pos(7,3)).
-
 occupata(pos(7,4)).
+
 occupata(pos(5,7)).
 occupata(pos(6,7)).
 occupata(pos(7,7)).
