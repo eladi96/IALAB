@@ -1,4 +1,5 @@
 %-------------------------------------------------------------------------------
+% prova commento per git
 % Predicati per il calcolo del g costo di un Nodo
 % gCosto(ListaAzioni, G_costo)
 costo(est, 1).
