@@ -26,7 +26,7 @@ applicabile(nord, pos(Riga, Colonna)):-
   % Controlliamo di non essere sul bordo superiore del labirinto
   Riga > 1,
   % Controlliamo che la casella ad est non sia occupata
-  NuovaRiga is Riga + 1,
+  NuovaRiga is Riga - 1,
   \+occupata(pos(NuovaRiga, Colonna)).
 
 %------------------------------------------------------------------
