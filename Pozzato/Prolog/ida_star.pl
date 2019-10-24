@@ -1,10 +1,9 @@
 %-------------------------------------------------------------------------------
 % ALGORTIMO IDA*
 % due sezioni principali:
-% 1) regole e fatti utili ai fini dell'algoritmo ida*
+% 1) regole e fatti di supporto all'algoritmo ida*
 % 2) vero e proprio algoritmo ida*
 %-------------------------------------------------------------------------------
-
 
 %-------------------------------------------------------------------------------
 % UTILI AI FINI DELL'ALGORITMO:
