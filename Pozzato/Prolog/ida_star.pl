@@ -1,12 +1,12 @@
 %-------------------------------------------------------------------------------
 % ALGORTIMO IDA*
-% due sezioni principali:
+% due sezioni principali
 % 1) regole e fatti di supporto all'algoritmo ida*
 % 2) vero e proprio algoritmo ida*
 %-------------------------------------------------------------------------------
 
 %-------------------------------------------------------------------------------
-% UTILI AI FINI DELL'ALGORITMO:
+% UTILI AI FINI DELL'ALGORITMO
 %-------------------------------------------------------------------------------
 % COSTI DEI NODI
 % Fatti per il calcolo del g costo di un Nodo.
@@ -89,7 +89,10 @@ ida_star(SoluzioneOrdinata):-
   % la gestione dell'algoritmo passa alla seguente regola:
   limit_search_ida(Soluzione, SogliaIniziale, S_Iniziale),
   % riordino la lista delle azioni fatte in modo tale da ottenere la soluzione finale ordinata
-  reverse(SoluzioneOrdinata, Soluzione).
+  reverse(SoluzioneOrdinata, Soluzione),
+  % quando ho trovato la soluzione, stampa il costo del cammino.
+  gCosto(Soluzione, CostoCammino),
+  write(CostoCammino).
 
 % ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 % La regola è di tipo: nomeRegola(Soluzione, Soglia, StatoIniziale)
