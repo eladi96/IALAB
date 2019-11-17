@@ -10,7 +10,9 @@ astar(SoluzioneOrdinata):-
   iniziale(S),
   hMiglioreUscita(S, F_costo_iniziale),
   astar_aux([nodo(S, F_costo_iniziale, [])], [], Soluzione),
-  reverse(SoluzioneOrdinata, Soluzione).
+  reverse(SoluzioneOrdinata, Soluzione),
+  gCosto(SoluzioneOrdinata, CostoCammino),
+  write(CostoCammino).
 
 %-------------------------------------------------------------------------------
 % Predicati ausiliari per la ricerca A*
