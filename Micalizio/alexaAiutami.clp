@@ -14,7 +14,13 @@
   (declare (salience 10000))
   =>
   (set-fact-duplication TRUE)
-  (focus DOMINIO DOMANDE DOMANDEPRINCIPALI REGOLE RICERCA STAMPA))
+  (focus DOMINIO
+         DOMANDE
+         DOMANDEPRINCIPALI
+         REGOLE
+         RICERCA
+         ;STAMPA
+         TOUR))
 
 ; funzione per chiedere le domande (MAIN è il modulo)
 ; La domanda viene chiesta ripetutamente finchè non riceve una risposta corretta
@@ -59,18 +65,12 @@
 )
 
 (deffunction MAIN::calcola-distanza(?n1 ?n2 ?e1 ?e2)
-  (bind ?s1 (sin (- 90 ?n1)))
-  (printout t "s1 = " ?s1)
-  (bind ?s2 (sin (- 90 ?n2)))
-  (printout t "s2 = " ?s2)
-  (bind ?c1 (cos (- 90 ?n1)))
-  (printout t "c1 = " ?c1)
-  (bind ?c2 (cos (- 90 ?n2)))
-  (printout t "c2 = " ?c2)
-  (bind ?FI (cos (abs (- ?e1 ?e2))))
-  (printout t "FI = " ?FI) ; angolo tra i due punti con vertice nel centro della terra
+  (bind ?s1 (sin (deg-rad (- 90 ?n1))))
+  (bind ?s2 (sin (deg-rad (- 90 ?n2))))
+  (bind ?c1 (cos (deg-rad (- 90 ?n1))))
+  (bind ?c2 (cos (deg-rad (- 90 ?n2))))
+  (bind ?FI (cos (deg-rad (abs (- ?e1 ?e2))))) ; angolo tra i due punti con vertice nel centro della terra
   (bind ?dist (* 6372.7955 (acos (+ (* ?c1 ?c2) (* ?FI ?s1 ?s2)))))
-  (printout t ?dist crlf)
   ?dist
 )
 
@@ -127,7 +127,10 @@
 ;******************************
 ; REGOLE
 ;******************************
-(defmodule REGOLE (import MAIN ?ALL) (import DOMANDE ?ALL) (import DOMANDEPRINCIPALI ?ALL) (export ?ALL))
+(defmodule REGOLE (import MAIN ?ALL)
+                  (import DOMANDE ?ALL)
+                  (import DOMANDEPRINCIPALI ?ALL)
+                  (export ?ALL))
 
 (deftemplate REGOLE::regola
   (multislot if)
@@ -264,11 +267,6 @@
                    (import REGOLE ?ALL)
                    (export ?ALL))
 
-(deftemplate RICERCA::cittaValutata
-  (slot nome)
-  (slot certezza)
-)
-
 (defrule RICERCA::punteggio-balneare
   (attributo (nome balneare) (valore ?p) (certezza ?c))
   (localita (nome ?nome)
@@ -348,12 +346,40 @@
 )
 
 (defrule RICERCA::distanza-citta
-  (localita (nome "Roma") (cordN ?n1) (cordE ?e1))
-  (localita (nome "Milano") (cordN ?n2) (cordE ?e2))
-  ;(test (neq ?nome1 ?nome2))
+  (localita (nome ?nome1) (cordN ?n1) (cordE ?e1))
+  (localita (nome ?nome2) (cordN ?n2) (cordE ?e2))
+  (test (neq ?nome1 ?nome2))
   =>
-  (printout t Roma " " Milano ": ")
-  (assert (distanza (partenza Roma) (arrivo Milano) (valore (calcola-distanza ?n1 ?n2 ?e1 ?e2))))
+  (assert (distanza (partenza ?nome1) (arrivo ?nome2) (valore (calcola-distanza ?n1 ?n2 ?e1 ?e2))))
+)
+
+;************************
+; COSTRUZIONE TOUR
+;***********************
+(defmodule TOUR (import MAIN ?ALL)
+                (import DOMANDE ?ALL)
+                (import DOMANDEPRINCIPALI ?ALL)
+                (import DOMINIO ?ALL)
+                (import REGOLE ?ALL)
+                (import RICERCA ?ALL) (export ?ALL))
+
+(deftemplate TOUR::tour
+  (multislot listaCitta)
+  (slot certezza (type FLOAT)))
+
+(defrule TOUR::citta-di-partenza
+  (attributo (nome cittaValutata) (valore ?citta) (certezza ?certezza))
+  (not (tour (listaCitta ?citta ?$)))
+  =>
+  (assert (tour (listaCitta ?citta) (certezza ?certezza)))
+)
+
+(defrule TOUR::citta-successiva
+  ?t <- (tour (listaCitta $?precedenti ?cittaCorrente))
+  (distanza (partenza ?cittaCorrente) (arrivo ?cittaSuccessiva) (valore ?distanza&:(< ?distanza 100.0)))
+  (test (not (member$ ?cittaSuccessiva ?precedenti)))
+  =>
+  (modify ?t (listaCitta ?precedenti ?cittaCorrente ?cittaSuccessiva))
 )
 
 ;************************
@@ -368,6 +394,7 @@
                   (export ?ALL))
 
 (defrule STAMPA::stampa-citta
+  (declare (salience 10))
   ?citta <- (attributo (nome cittaValutata) (valore ?nome) (certezza ?certezza))
   (not (attributo (nome cittaValutata) (certezza ?per1&:(> ?per1 ?certezza)))) ;non esiste una citta che abbia una certezza maggiore
   =>
@@ -375,6 +402,7 @@
   (format t " %-24s %2d%%%n" ?nome ?certezza))
 
 (defrule STAMPA::rimuovi-citta-scarse
+  (declare (salience 20))
   ?citta <- (attributo (nome cittaValutata) (certezza ?per&:(< ?per 50)))
   =>
   (retract ?citta))
