@@ -395,7 +395,6 @@
   (attributo (nome numPersone) (valore ?persone))
   (attributo (nome budget) (valore ?budget))
   (attributo (nome numGiorni) (valore ?giorni))
-  ; (costoNotte ?costo&:(<= ?costo (round (/ ?budget (- ?giorni 1) ?persone))))
   (albergo (nome ?nomeAlbergo) (localita ?citta) (camereLibere ?n&:(> ?n (/ ?persone 2))))
   (not (tour (listaCitta ?citta ?$)))
   =>
@@ -408,7 +407,8 @@
   (distanza (partenza ?cittaCorrente) (arrivo ?cittaSuccessiva) (valore ?distanza&:(< ?distanza 100.0)))
   (attributo (nome cittaValutata) (valore ?cittaSuccessiva) (certezza ?certezzaSuccessiva))
   (test (not (member$ ?cittaSuccessiva ?precedenti)))
-  (albergo (nome ?Asuccessivo) (localita ?cittaSuccessiva))
+  (attributo (nome numPersone) (valore ?persone))
+  (albergo (nome ?Asuccessivo) (localita ?cittaSuccessiva) (camereLibere ?n&:(> ?n (/ ?persone 2))))
   ; Inserire limite massimo citta nel tour
   =>
   (modify ?t (listaCitta ?precedenti ?cittaCorrente ?cittaSuccessiva)
