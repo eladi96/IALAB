@@ -95,16 +95,30 @@
   (slot attributo (default ?NONE))
   (slot domanda (default ?NONE))
   (multislot risposteValide (default ?NONE))
-  (slot giaChiesta (default FALSE)))
+  (slot giaChiesta (default FALSE))
+  (multislot precursore (default ?DERIVE)))
 
 ; Regola che fa avviare la richiesta delle domande. Esse saranno chieste solo se
 ; il valore giaChiesta valga FALSE, e diventerà TRUE una volta che la domanda sicilia
 ; stata chiesta.
-(defrule DOMANDE::chiedi-una-domanda
+(defrule DOMANDE::domanda-con-precursore
    ?f <- (templateDomanda (giaChiesta FALSE)
                    (domanda ?domanda)
                    (attributo ?attributo)
-                   (risposteValide $?risposteValide))
+                   (risposteValide $?risposteValide)
+                   (precursore ?precursore is ?rispostaPrecursore))
+   (attributo (nome ?precursore) (valore ?rispostaPrecursore))
+   =>
+   (modify ?f (giaChiesta TRUE))
+   (assert (attributo (nome ?attributo)
+                      (valore (chiedi-domanda ?domanda ?risposteValide)))))
+
+(defrule DOMANDE::domanda-senza-precursore
+   ?f <- (templateDomanda (giaChiesta FALSE)
+                   (domanda ?domanda)
+                   (attributo ?attributo)
+                   (risposteValide $?risposteValide)
+                   (precursore))
    =>
    (modify ?f (giaChiesta TRUE))
    (assert (attributo (nome ?attributo)
@@ -116,28 +130,31 @@
 (defmodule DOMANDEPRINCIPALI (import MAIN ?ALL) (import DOMANDE ?ALL) (export ?ALL))
 
 (deffacts DOMANDEPRINCIPALI::elencoDomandePrincipali
-  (templateDomanda (attributo numGiorni)
-                   (domanda "Quanti giorni deve durare il viaggio? Minimo due.")
+
+  (templateDomanda (attributo numStelle)
+                   (domanda "Hai preferenze sul numero di stelle degli alberghi?")
+                   (risposteValide 1 2 3 4 no))
+  ; Se non chiediamo i giorni all'inizio, proponiamo una soluzione che abbia un numero numLuoghi pari a numGiorni / 2
+  (templateDomanda (attributo budget)
+                   (domanda "A quanto ammonta il tuo budget?")
                    (risposteValide interoPositivo))
   (templateDomanda (attributo numPersone)
                    (domanda "Quante persone parteciperanno?")
                    (risposteValide interoPositivo))
-  ; Se non chiediamo i giorni all'inizio, proponiamo una soluzione che abbia un numero numLuoghi pari a numGiorni / 2
-  (templateDomanda (attributo budget)
-                   (domanda "A quanto ammonta il vostro budget?")
+  (templateDomanda (attributo numGiorni)
+                   (domanda "Quanti giorni deve durare il viaggio? Minimo due.")
                    (risposteValide interoPositivo))
-  (templateDomanda (attributo museo_escursione)
-                   (domanda "Preferiresti visitare un MUSEO o fare un'ESCURSIONE?")
-                   (risposteValide museo escursione indifferente))
-  (templateDomanda (attributo storia_servizi)
-                   (domanda "Nel visitare una nuova città, ti interessa maggiormente la sua STORIA o i suoi SERVIZI?")
-                   (risposteValide storia servizi indifferente))
-  (templateDomanda (attributo rilassarsi_cosenuove)
-                   (domanda "La vacanza serve soprattutto per RILASSARSI o scoprire cose NUOVE?")
-                   (risposteValide rilassarsi nuove indifferente))
+  (templateDomanda (attributo tradizione_avventura)
+                   (domanda "Preferisci conoscere le TRADIZIONI del posto o vivere esperienze più AVVENTUROSE?")
+                   (risposteValide tradizioni avventurose indifferente)
+                   (precursore scarpe_costume is scarpe))
+  (templateDomanda (attributo spiaggia_spa)
+                   (domanda "Preferisci andare in SPIAGGIA o in una SPA?")
+                   (risposteValide spiaggia spa indifferente)
+                   (precursore scarpe_costume is costume))
   (templateDomanda (attributo scarpe_costume)
                    (domanda "In valigia non deve mancare... SCARPE comode o COSTUME da bagno?")
-                   (risposteValide scarpe costume indifferente))
+                   (risposteValide scarpe costume))
   )
 
 ;******************************
@@ -176,154 +193,238 @@
   (retract ?attr1)
   (modify ?attr2 (certezza (calcola-certezza ?c1 ?c2))))
 
+
 (deffacts REGOLE::regole-tour
   (regola (if scarpe_costume is scarpe)
-          (then balneare is 5 with certezza -80 and
-                balneare is 4 with certezza -50 and
-                balneare is 3 with certezza -30 and
-                sportivo is 5 with certezza 90 and
-                sportivo is 4 with certezza 60 and
-                sportivo is 3 with certezza 40 and
-                montano is 5 with certezza 90 and
+          (then montano is 5 with certezza 70 and
                 montano is 4 with certezza 50 and
-                montano is 3 with certezza 20 and
-                lacustre is 5 with certezza 80 and
-                lacustre is 4 with certezza 50 and
-                lacustre is 3 with certezza 30 and
-                balneare is 2 with certezza -20 and
-                balneare is 1 with certezza -60 and
-                balneare is 0 with certezza -80 and))
-  (regola (if scarpe_costume is costume)
-          (then balneare is 5 with certezza 90 and
-                balneare is 4 with certezza 70 and
-                balneare is 3 with certezza 40 and
-                sportivo is 5 with certezza -90 and
-                sportivo is 4 with certezza -60 and
-                sportivo is 3 with certezza -40 and
-                montano is 5 with certezza -90 and
-                montano is 4 with certezza -50 and
-                montano is 3 with certezza -20 and
-                lacustre is 5 with certezza 40 and
-                lacustre is 4 with certezza 20 and
-                lacustre is 3 with certezza 10 and))
+                montano is 3 with certezza 30 and
+                montano is 2 with certezza -30 and
+                montano is 1 with certezza -50 and
+                montano is 0 with certezza -70 and
 
-  (regola (if museo_escursioni is museo)
-          (then culturale is 5 with certezza 100 and
-                culturale is 4 with certezza 80 and
-                culturale is 3 with certezza 40 and
-                balneare is 5 with certezza -80 and
+                naturalistico is 5 with certezza 70 and
+                naturalistico is 4 with certezza 50 and
+                naturalistico is 3 with certezza 30 and
+                naturalistico is 2 with certezza -30 and
+                naturalistico is 1 with certezza -50 and
+                naturalistico is 0 with certezza -70 and
+
+                sportivo is 5 with certezza 70 and
+                sportivo is 4 with certezza 50 and
+                sportivo is 3 with certezza 30 and
+                sportivo is 2 with certezza -30 and
+                sportivo is 1 with certezza -50 and
+                sportivo is 0 with certezza -70 and
+
+                culturale is 5 with certezza 70 and
+                culturale is 4 with certezza 50 and
+                culturale is 3 with certezza 30 and
+                culturale is 2 with certezza -30 and
+                culturale is 1 with certezza -50 and
+                culturale is 0 with certezza -70 and
+
+                ;negativi
+                balneare is 5 with certezza -70 and
                 balneare is 4 with certezza -50 and
                 balneare is 3 with certezza -30 and
-                sportivo is 5 with certezza -90 and
-                sportivo is 4 with certezza -60 and
-                sportivo is 3 with certezza -40 and
-                montano is 5 with certezza -90 and
-                montano is 4 with certezza -50 and
-                montano is 3 with certezza -20 and
-                lacustre is 5 with certezza -90 and
-                lacustre is 4 with certezza -60 and
-                lacustre is 3 with certezza -30 and))
-  (regola (if museo_escursioni is escursioni)
-          (then culturale is 5 with certezza -90 and
-                culturale is 4 with certezza -70 and
-                culturale is 3 with certezza -40 and
-                balneare is 5 with certezza 10 and
-                balneare is 4 with certezza 40 and
-                balneare is 3 with certezza 60 and
-                sportivo is 5 with certezza 90 and
-                sportivo is 4 with certezza 70 and
-                sportivo is 3 with certezza 50 and
-                montano is 5 with certezza 90 and
-                montano is 4 with certezza 70 and
-                montano is 3 with certezza 50 and
+                balneare is 2 with certezza 30 and
+                balneare is 1 with certezza 50 and
+                balneare is 0 with certezza 70 and
+
+                lacustre is 5 with certezza -70 and
+                lacustre is 4 with certezza -50 and
+                lacustre is 3 with certezza -30 and
+                lacustre is 2 with certezza 30 and
+                lacustre is 1 with certezza 50 and
+                lacustre is 0 with certezza 70 and
+
+                termale is 5 with certezza -70 and
+                termale is 4 with certezza -50 and
+                termale is 3 with certezza -30 and
+                termale is 2 with certezza 30 and
+                termale is 1 with certezza 50 and
+                termale is 0 with certezza 70 and))
+
+  (regola (if scarpe_costume is costume)
+          (then balneare is 5 with certezza 70 and
+                balneare is 4 with certezza 50 and
+                balneare is 3 with certezza 30 and
+                balneare is 2 with certezza -30 and
+                balneare is 1 with certezza -50 and
+                balneare is 0 with certezza -70 and
+
+                termale is 5 with certezza 70 and
+                termale is 4 with certezza 50 and
+                termale is 3 with certezza 30 and
+                termale is 2 with certezza -30 and
+                termale is 1 with certezza -50 and
+                termale is 0 with certezza -70 and
+
                 lacustre is 5 with certezza 70 and
                 lacustre is 4 with certezza 50 and
-                lacustre is 3 with certezza 30 and))
+                lacustre is 3 with certezza 30 and
+                lacustre is 2 with certezza -30 and
+                lacustre is 1 with certezza -50 and
+                lacustre is 0 with certezza -70 and
 
-  (regola (if storia_servizi is storia)
-          (then culturale is 5 with certezza 100 and
-                culturale is 4 with certezza 80 and
-                culturale is 3 with certezza 40 and
-                religioso is 5 with certezza 60 and
-                religioso is 4 with certezza 30 and
-                religioso is 3 with certezza 10 and
-                enogastronomico is 5 with certezza 80 and
-                enogastronomico is 4 with certezza 50 and
-                enogastronomico is 3 with certezza 30 and
-                balneare is 2 with certezza -20 and
-                balneare is 1 with certezza -40 and
-                balneare is 0 with certezza -80 and
-                termale is 2 with certezza 0 and
-                termale is 1 with certezza -40 and
-                termale is 0 with certezza -60))
-  (regola (if storia_servizi is servizi)
-          (then balneare is 5 with certezza 80 and
-                balneare is 4 with certezza 60 and
-                balneare is 3 with certezza 40 and
-                termale is 5 with certezza 100 and
-                termale is 4 with certezza 90 and
-                termale is 3 with certezza 50 and
-                culturale is 2 with certezza -20 and
-                culturale is 1 with certezza -40 and
-                culturale is 0 with certezza -80 and
-                religioso is 2 with certezza -30 and
-                religioso is 1 with certezza -50 and
-                religioso is 0 with certezza -80 and
-                enogastronomico is 2 with certezza -10 and
-                enogastronomico is 1 with certezza -30 and
-                enogastronomico is 0 with certezza -60 and))
+                sportivo is 5 with certezza 50 and
+                sportivo is 4 with certezza 30 and
+                sportivo is 3 with certezza 10 and
+                sportivo is 2 with certezza -10 and
+                sportivo is 1 with certezza -30 and
+                sportivo is 0 with certezza -50 and
 
-    (regola (if rilassarsi_cosenuove is nuove)
-            (then sportivo is 5 with certezza 90 and
-                  sportivo is 4 with certezza 60 and
-                  sportivo is 3 with certezza 40 and
-                  culturale is 5 with certezza 80 and
-                  culturale is 4 with certezza 50 and
-                  culturale is 3 with certezza 30 and
-                  naturalistico is 5 with certezza 90 and
-                  naturalistico is 4 with certezza 60 and
-                  naturalistico is 3 with certezza 40 and
-                  enogastronomico is 5 with certezza 90 and
-                  enogastronomico is 4 with certezza 80 and
-                  enogastronomico is 3 with certezza 50 and
-                  montano is 5 with certezza 90 and
-                  montano is 4 with certezza 70 and
-                  montano is 3 with certezza 40 and
-                  lacustre is 3 with certezza 60 and
-                  lacustre is 2 with certezza 30 and
-                  lacustre is 1 with certezza 10 and
-                  termale is 2 with certezza -10 and
-                  termale is 1 with certezza -20 and
-                  termale is 0 with certezza -40 and
-                  balneare is 2 with certezza 0 and
-                  balneare is 1 with certezza -40 and
-                  balneare is 0 with certezza -60 and))
-    (regola (if rilassarsi_cosenuove is rilassarsi)
-            (then balneare is 5 with certezza 80 and
-                  balneare is 4 with certezza 60 and
-                  balneare is 3 with certezza 30 and
-                  montano is 4 with certezza 80 and
-                  montano is 3 with certezza 50 and
-                  montano is 2 with certezza 20 and
-                  lacustre is 5 with certezza 70 and
-                  lacustre is 4 with certezza 40 and
-                  lacustre is 3 with certezza 20 and
-                  termale is 5 with certezza 70 and
-                  termale is 4 with certezza 30 and
-                  termale is 3 with certezza 10 and
-                  sportivo is 2 with certezza 0 and
-                  sportivo is 1 with certezza -20 and
-                  sportivo is 0 with certezza -40 and
-                  naturalistico is 2 with certezza 0 and
-                  naturalistico is 1 with certezza -20 and
-                  naturalistico is 0 with certezza -40 and
-                  enogastronomico is 2 with certezza 20 and
-                  enogastronomico is 1 with certezza -20 and
-                  enogastronomico is 0 with certezza -40 and
-                  culturale is 2 with certezza -20 and
-                  culturale is 1 with certezza -50 and
-                  culturale is 0 with certezza -80 and))
+                ;negativi
+                culturale is 5 with certezza -70 and
+                culturale is 4 with certezza -50 and
+                culturale is 3 with certezza -30 and
+                culturale is 2 with certezza 30 and
+                culturale is 1 with certezza 50 and
+                culturale is 0 with certezza 70 and
+
+                naturalistico is 5 with certezza -70 and
+                naturalistico is 4 with certezza -50 and
+                naturalistico is 3 with certezza -30 and
+                naturalistico is 2 with certezza 30 and
+                naturalistico is 1 with certezza 50 and
+                naturalistico is 0 with certezza 70 and
+
+                montano is 5 with certezza -70 and
+                montano is 4 with certezza -50 and
+                montano is 3 with certezza -30 and
+                montano is 2 with certezza 30 and
+                montano is 1 with certezza 50 and
+                montano is 0 with certezza 70 and))
+
+  (regola (if spiaggia_spa is spiaggia)
+          (then balneare is 5 with certezza 70 and
+                balneare is 4 with certezza 50 and
+                balneare is 3 with certezza 30 and
+                balneare is 2 with certezza -30 and
+                balneare is 1 with certezza -50 and
+                balneare is 0 with certezza -70 and
+
+                sportivo is 5 with certezza 50 and
+                sportivo is 4 with certezza 30 and
+                sportivo is 3 with certezza 10 and
+                sportivo is 2 with certezza -10 and
+                sportivo is 1 with certezza -30 and
+                sportivo is 0 with certezza -50 and
+
+                lacustre is 5 with certezza 50 and
+                lacustre is 4 with certezza 30 and
+                lacustre is 3 with certezza 10 and
+                lacustre is 2 with certezza -10 and
+                lacustre is 1 with certezza -30 and
+                lacustre is 0 with certezza -50 and
+
+                ;negativi
+                termale is 5 with certezza -70 and
+                termale is 4 with certezza -50 and
+                termale is 3 with certezza -30 and
+                termale is 2 with certezza 30 and
+                termale is 1 with certezza 50 and
+                termale is 0 with certezza 70 and))
+
+  (regola (if spiaggia_spa is spa)
+          (then termale is 5 with certezza 70 and
+                termale is 4 with certezza 50 and
+                termale is 3 with certezza 30 and
+                termale is 2 with certezza -30 and
+                termale is 1 with certezza -50 and
+                termale is 0 with certezza -70 and
+
+                ;negativi
+                balneare is 5 with certezza -70 and
+                balneare is 4 with certezza -50 and
+                balneare is 3 with certezza -30 and
+                balneare is 2 with certezza 30 and
+                balneare is 1 with certezza 50 and
+                balneare is 0 with certezza 70 and
+
+                sportivo is 5 with certezza -70 and
+                sportivo is 4 with certezza -50 and
+                sportivo is 3 with certezza -30 and
+                sportivo is 2 with certezza 30 and
+                sportivo is 1 with certezza 50 and
+                sportivo is 0 with certezza 70 and))
+
+(regola (if tradizione_avventura is tradizioni)
+        (then enogastronomico is 5 with certezza 80  and
+              enogastronomico is 4 with certezza 60  and
+              enogastronomico is 3 with certezza 30  and
+              enogastronomico is 2 with certezza -30 and
+              enogastronomico is 1 with certezza -60 and
+              enogastronomico is 0 with certezza -80 and
+
+              culturale is 5 with certezza 80  and
+              culturale is 4 with certezza 60  and
+              culturale is 3 with certezza 30  and
+              culturale is 2 with certezza -30 and
+              culturale is 1 with certezza -60 and
+              culturale is 0 with certezza -80 and
+
+              religioso is 5 with certezza 80  and
+              religioso is 4 with certezza 60  and
+              religioso is 3 with certezza 30  and
+              religioso is 2 with certezza -30 and
+              religioso is 1 with certezza -60 and
+              religioso is 0 with certezza -80 and
+
+              ; negativi
+              sportivo is 5 with certezza 80  and
+              sportivo is 4 with certezza 60  and
+              sportivo is 3 with certezza 30  and
+              sportivo is 2 with certezza -30 and
+              sportivo is 1 with certezza -60 and
+              sportivo is 0 with certezza -80 and
+
+              naturalistico is 5 with certezza 80  and
+              naturalistico is 4 with certezza 60  and
+              naturalistico is 3 with certezza 30  and
+              naturalistico is 2 with certezza -30 and
+              naturalistico is 1 with certezza -60 and
+              naturalistico is 0 with certezza -80 ))
+
+(regola (if tradizione_avventura is avventurose)
+        (then naturalistico is 5 with certezza 80  and
+              naturalistico is 4 with certezza 60  and
+              naturalistico is 3 with certezza 30  and
+              naturalistico is 2 with certezza -30 and
+              naturalistico is 1 with certezza -60 and
+              naturalistico is 0 with certezza -80 and
+
+              sportivo is 5 with certezza 80  and
+              sportivo is 4 with certezza 60  and
+              sportivo is 3 with certezza 30  and
+              sportivo is 2 with certezza -30 and
+              sportivo is 1 with certezza -60 and
+              sportivo is 0 with certezza -80 and
+
+              ; negativi
+              religioso is 5 with certezza -80  and
+              religioso is 4 with certezza -60  and
+              religioso is 3 with certezza -30  and
+              religioso is 2 with certezza 30 and
+              religioso is 1 with certezza 60 and
+              religioso is 0 with certezza 80 and
+
+              enogastronomico is 5 with certezza 80  and
+              enogastronomico is 4 with certezza 60  and
+              enogastronomico is 3 with certezza 30  and
+              enogastronomico is 2 with certezza -30 and
+              enogastronomico is 1 with certezza -60 and
+              enogastronomico is 0 with certezza -80 and
+
+              culturale is 5 with certezza 80  and
+              culturale is 4 with certezza 60  and
+              culturale is 3 with certezza 30  and
+              culturale is 2 with certezza -30 and
+              culturale is 1 with certezza -60 and
+              culturale is 0 with certezza -80 ))
 )
+
 
 ;***********************
 ; MODULO RICERCA
@@ -449,24 +550,31 @@
   (slot certezza (type FLOAT)))
 
 (defrule TOUR::citta-di-partenza
-  (attributo (nome cittaValutata) (valore ?citta) (certezza ?certezza))
+  (attributo (nome cittaValutata) (valore ?citta) (certezza ?certezzaCitta))
   (attributo (nome numPersone) (valore ?persone))
   (attributo (nome budget) (valore ?budget))
   (attributo (nome numGiorni) (valore ?giorni))
   (albergo (nome ?nomeAlbergo) (localita ?citta) (camereLibere ?n&:(> ?n (/ ?persone 2))))
+  (attributo (nome albergoValutato) (valore ?nomeAlbergo) (certezza ?certezzaAlbergo))
   (not (tour (listaCitta ?citta ?$)))
   =>
   ;comina certezza citta con certezza albergo
-  (assert (tour (listaCitta ?citta) (listaAlberghi ?nomeAlbergo) (certezza ?certezza)))
+  (assert (tour (listaCitta ?citta) (listaAlberghi ?nomeAlbergo) (certezza ?certezzaCitta)))
 )
 
 (defrule TOUR::citta-successiva
   ?t <- (tour (listaCitta $?precedenti ?cittaCorrente) (listaAlberghi $?Aprec ?Acorrente) (certezza ?certezzaCorrente))
-  (distanza (partenza ?cittaCorrente) (arrivo ?cittaSuccessiva) (valore ?distanza&:(< ?distanza 100.0)))
+  (attributo (nome numGiorni) (valore ?giorni))
+  (test (< (+ 1 (length$ ?precedenti)) (/ (+ 1 ?giorni) 2)))
+
   (attributo (nome cittaValutata) (valore ?cittaSuccessiva) (certezza ?certezzaSuccessiva))
+  (distanza (partenza ?cittaCorrente) (arrivo ?cittaSuccessiva) (valore ?distanza&:(< ?distanza 100.0)))
   (test (not (member$ ?cittaSuccessiva ?precedenti)))
-  (albergo (nome ?Asuccessivo) (localita ?cittaSuccessiva))
-  ; Inserire limite massimo citta nel tour -> 1 citta in 2 giorni
+
+  (attributo (nome numPersone) (valore ?persone))
+  (albergo (nome ?Asuccessivo) (localita ?cittaSuccessiva) (camereLibere ?n&:(> ?n (/ ?persone 2))))
+  (attributo (nome albergoValutato) (valore ?nomeAlbergo) (certezza ?certezzaAlbergo))
+
   =>
   (modify ?t (listaCitta ?precedenti ?cittaCorrente ?cittaSuccessiva)
              (listaAlberghi ?Aprec ?Acorrente ?Asuccessivo)
@@ -509,7 +617,7 @@
 
 (defrule STAMPA::rimuovi-tour-scarsi
   (declare (salience 20))
-  ?tour <- (tour (certezza ?certezza&:(< ?certezza 50)))
+  ?tour <- (tour (certezza ?certezza&:(< ?certezza 0)))
   =>
   (retract ?tour))
 
