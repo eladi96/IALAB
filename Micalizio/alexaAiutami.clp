@@ -59,7 +59,7 @@
       (bind ?nuovaCertezza (* 100 (- (+ ?c1 ?c2) (* ?c1 ?c2)))))
   (if (and (< ?c1 0) (< ?c2 0)) then
       (bind ?nuovaCertezza (* 100 (+ (+ ?c1 ?c2) (* ?c1 ?c2)))))
-  (if (< (* ?c1 ?c2) 0) then
+  (if (<= (* ?c1 ?c2) 0) then
       (bind ?nuovaCertezza (* 100 (/ (+ ?c1 ?c2) (- 1.01 (min (abs ?c1) (abs ?c2)))))))
   ?nuovaCertezza
 )
