@@ -84,6 +84,12 @@
   (printout t ?listaCitta crlf ?listaAlberghi " con certezza del " ?certezza "%" crlf)
 )
 
+(deffunction MAIN::coefficiente-tour(?giorni ?certezza ?numCitta)
+  (if (eq 0 (mod ?giorni 2)) then (bind ?risultato (* ?certezza (/ ?numCitta (/ ?giorni 2)))))
+  (if (eq 1 (mod ?giorni 2)) then (bind ?risultato (* ?certezza (/ ?numCitta (/ (+ ?giorni 1) 2)))))
+  ?risultato
+)
+
 ;****************************
 ; MODULO DOMANDE
 ;****************************
@@ -525,34 +531,36 @@
 (defrule TOUR::citta-di-partenza
   (attributo (nome cittaValutata) (valore ?citta) (certezza ?certezzaCitta))
   (attributo (nome numPersone) (valore ?persone))
-  (attributo (nome budget) (valore ?budget))
   (attributo (nome numGiorni) (valore ?giorni))
   (albergo (nome ?nomeAlbergo) (localita ?citta) (camereLibere ?n&:(> ?n (/ ?persone 2))))
   (attributo (nome albergoValutato) (valore ?nomeAlbergo) (certezza ?certezzaAlbergo))
   (not (tour (listaCitta ?citta ?$)))
   =>
-  ;comina certezza citta con certezza albergo
-  (assert (tour (listaCitta ?citta) (listaAlberghi ?nomeAlbergo) (certezza ?certezzaCitta)))
-)
+  (assert (tour (listaCitta ?citta) (listaAlberghi ?nomeAlbergo) (certezza (coefficiente-tour ?giorni (/ (+ ?certezzaCitta ?certezzaAlbergo) 2) 1)))))
 
 (defrule TOUR::citta-successiva
-  ?t <- (tour (listaCitta $?precedenti ?cittaCorrente) (listaAlberghi $?Aprec ?Acorrente) (certezza ?certezzaCorrente))
+  ; risolvere problema: casulità degli hotel (nella traccia "favoreggiamento")
+  ?t <- (tour (listaCitta $?cittaPrec ?cittaCorr) (listaAlberghi $?alberghiPrec ?albergoCorr) (certezza ?certezzaTour))
   (attributo (nome numGiorni) (valore ?giorni))
-  (test (< (+ 1 (length$ ?precedenti)) (/ (+ 1 ?giorni) 2)))
+  (test (< (+ 1 (length$ ?cittaPrec)) (/ ?giorni 2)))
 
-  (attributo (nome cittaValutata) (valore ?cittaSuccessiva) (certezza ?certezzaSuccessiva))
-  (distanza (partenza ?cittaCorrente) (arrivo ?cittaSuccessiva) (valore ?distanza&:(< ?distanza 100.0)))
-  (test (not (member$ ?cittaSuccessiva ?precedenti)))
+  (attributo (nome cittaValutata) (valore ?cittaSucc) (certezza ?certezzaCittaSucc))
+  (distanza (partenza ?cittaCorr) (arrivo ?cittaSucc) (valore ?distanza&:(< ?distanza 100.0)))
+  (test (not (member$ ?cittaSucc ?cittaPrec)))
 
   (attributo (nome numPersone) (valore ?persone))
-  (albergo (nome ?Asuccessivo) (localita ?cittaSuccessiva) (camereLibere ?n&:(> ?n (/ ?persone 2))))
-  (attributo (nome albergoValutato) (valore ?nomeAlbergo) (certezza ?certezzaAlbergo))
+  (albergo (nome ?albergoSucc) (localita ?cittaSucc) (camereLibere ?n&:(> ?n (/ ?persone 2))))
+  (attributo (nome albergoValutato) (valore ?albergoSucc) (certezza ?certezzaAlbergoSucc))
 
   =>
-  (modify ?t (listaCitta ?precedenti ?cittaCorrente ?cittaSuccessiva)
-             (listaAlberghi ?Aprec ?Acorrente ?Asuccessivo)
-             (certezza (/ (+ ?certezzaCorrente ?certezzaSuccessiva) 2)))
-)
+  (assert (tour (listaCitta ?cittaPrec ?cittaCorr ?cittaSucc)
+                (listaAlberghi ?alberghiPrec ?albergoCorr ?albergoSucc)
+                ;(certezza (/ (+ ?certezzaTour (/ (+ ?certezzaCittaSucc ?certezzaAlbergoSucc) 2)) 2))))
+                (certezza (coefficiente-tour ?giorni
+                                             (calcola-certezza ?certezzaTour (/ (+ ?certezzaCittaSucc ?certezzaAlbergoSucc) 2)) 
+                                             (+ 1 (length$ ?cittaPrec))))
+
+)))
 
 ;************************
 ; MODULO STAMPA
@@ -576,24 +584,24 @@
 
 (defrule STAMPA::rimuovi-citta-scarse
   (declare (salience 20))
-  ?citta <- (attributo (nome cittaValutata) (certezza ?per&:(< ?per 50)))
+  ?citta <- (attributo (nome cittaValutata) (certezza ?per&:(< ?per 80)))
   =>
   (retract ?citta))
 
-(defrule STAMPA::stampa-punteggio
-  ?punteggio <- (attributo (nome ?tipologia&:(or (eq ?tipologia balneare)
-                                                  (eq ?tipologia montano)
-                                                  (eq ?tipologia naturalistico)
-                                                  (eq ?tipologia termale)
-                                                  (eq ?tipologia culturale)
-                                                  (eq ?tipologia religioso)
-                                                  (eq ?tipologia sportivo)
-                                                  (eq ?tipologia enogastronomico)
-                                                  (eq ?tipologia lacustre))) (valore ?b) (certezza ?cb))
-  =>
-  (retract ?punteggio)
-  (format t " %-24s %d %2d%%%n" ?tipologia ?b ?cb)
-)
+;(defrule STAMPA::stampa-punteggio
+;  ?punteggio <- (attributo (nome ?tipologia&:(or (eq ?tipologia balneare)
+;                                                  (eq ?tipologia montano)
+;                                                  (eq ?tipologia naturalistico)
+;                                                  (eq ?tipologia termale)
+;                                                  (eq ?tipologia culturale)
+;                                                  (eq ?tipologia religioso)
+;                                                  (eq ?tipologia sportivo)
+;                                                  (eq ?tipologia enogastronomico)
+;                                                  (eq ?tipologia lacustre))) (valore ?b) (certezza ?cb))
+;  =>
+;  (retract ?punteggio)
+;  (format t " %-24s %d %2d%%%n" ?tipologia ?b ?cb)
+;)
 
 (defrule STAMPA::stampa-tour
   (declare (salience 10))
@@ -605,20 +613,20 @@
 
 (defrule STAMPA::rimuovi-tour-scarsi
   (declare (salience 20))
-  ?tour <- (tour (certezza ?certezza&:(< ?certezza 80)))
+  ?tour <- (tour (certezza ?certezza&:(< ?certezza 0)))
   =>
   (retract ?tour))
 
-;(defrule STAMPA::stampa-albergo
-;  (declare (salience 10))
-;  ?albergo <- (attributo (nome albergoValutato) (valore ?nome) (certezza ?certezza))
-;  (not (attributo (nome albergoValutato) (certezza ?per1&:(> ?per1 ?certezza)))) ;non esiste una citta che abbia una certezza maggiore
-;  =>
-;  (retract ?albergo)
-;  (format t " %-24s %2d%%%n" ?nome ?certezza))
-;
-;(defrule STAMPA::rimuovi-alberghi-scarsi
-;  (declare (salience 20))
-;  ?albergo <- (attributo (nome albergoValutato) (certezza ?per&:(< ?per 50)))
-;  =>
-;  (retract ?albergo))
+(defrule STAMPA::stampa-albergo
+  (declare (salience 10))
+  ?albergo <- (attributo (nome albergoValutato) (valore ?nome) (certezza ?certezza))
+  (not (attributo (nome albergoValutato) (certezza ?per1&:(> ?per1 ?certezza)))) ;non esiste una citta che abbia una certezza maggiore
+  =>
+  (retract ?albergo)
+  (format t " %-24s %2d%%%n" ?nome ?certezza))
+
+(defrule STAMPA::rimuovi-alberghi-scarsi
+  (declare (salience 20))
+  ?albergo <- (attributo (nome albergoValutato) (certezza ?per&:(< ?per 80)))
+  =>
+  (retract ?albergo))
