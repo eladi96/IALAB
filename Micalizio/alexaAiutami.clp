@@ -557,7 +557,7 @@
                 (listaAlberghi ?alberghiPrec ?albergoCorr ?albergoSucc)
                 ;(certezza (/ (+ ?certezzaTour (/ (+ ?certezzaCittaSucc ?certezzaAlbergoSucc) 2)) 2))))
                 (certezza (coefficiente-tour ?giorni
-                                             (calcola-certezza ?certezzaTour (/ (+ ?certezzaCittaSucc ?certezzaAlbergoSucc) 2)) 
+                                             (calcola-certezza ?certezzaTour (/ (+ ?certezzaCittaSucc ?certezzaAlbergoSucc) 2))
                                              (+ 1 (length$ ?cittaPrec))))
 
 )))
