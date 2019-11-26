@@ -14,6 +14,7 @@
   (declare (salience 10000))
   =>
   (set-fact-duplication TRUE)
+  (assert (soluzioni 0))
   (focus DOMINIO
          DOMANDE
          DOMANDEPRINCIPALI
@@ -80,8 +81,41 @@
   ?dist
 )
 
-(deffunction MAIN::stampa-tour(?listaCitta ?listaAlberghi ?certezza)
-  (printout t ?listaCitta crlf ?listaAlberghi " con certezza del " ?certezza "%" crlf)
+(deffunction MAIN::stampa-tour(?numeroTour ?listaCitta ?listaAlberghi ?listaStelle ?listaCosti ?listaNotti ?certezza)
+  (bind ?i 1)
+  (format t "%nTOUR %-2d - PUNTEGGIO: %-3.2f%n%n" ?numeroTour ?certezza)
+  (format t "          CITTA                    ALBERGO          STELLE    COSTO NOTTE      NOTTI%n" )
+  (while (<= ?i (length$ ?listaCitta)) do
+    (bind ?citta (nth$ ?i ?listaCitta))
+    (bind ?albergo (nth$ ?i ?listaAlberghi))
+    (bind ?stelle (nth$ ?i ?listaStelle))
+    (bind ?costo (nth$ ?i ?listaCosti))
+    (bind ?notti (nth$ ?i ?listaNotti))
+    (format t  "Tappa %-2d: %-25s%-20s%-10g%-15.2f%-10d%n" ?i ?citta ?albergo ?stelle ?costo ?notti)
+    (bind ?i (+ 1 ?i))
+  )
+)
+
+(deffunction MAIN::punteggio-stelle(?stelleUtente ?stelleAlbergo ?certezza)
+  (if (neq ?stelleUtente no) then
+    (bind ?certezza (* ?certezza (- 1 (/ (abs (- ?stelleUtente ?stelleAlbergo)) 3))))
+  )
+  ?certezza
+)
+
+(deffunction MAIN::spartisci-notti(?numLocalita ?nottiPerLocalita ?nottiAvanzate)
+  (bind ?listaNotti (create$ ))
+  (bind ?i 1)
+  (while (<= ?i ?numLocalita) do
+    (bind ?listaNotti (insert$ ?listaNotti ?i ?nottiPerLocalita))
+    (if (> ?nottiAvanzate 0) then
+      (bind ?nottiCorrente (nth$ ?i ?listaNotti))
+      (bind ?listaNotti (replace$ ?listaNotti ?i ?i (+ ?nottiCorrente 1)))
+      (bind ?nottiAvanzate (- ?nottiAvanzate 1))
+    )
+    (bind ?i (+ 1 ?i))
+  )
+  ?listaNotti
 )
 
 ;****************************
@@ -145,7 +179,7 @@
                    (domanda "Quanti giorni deve durare il viaggio? Minimo due.")
                    (risposteValide interoPositivo))
   (templateDomanda (attributo tradizione_avventura)
-                   (domanda "Preferisci conoscere le TRADIZIONI del posto o vivere esperienze più AVVENTUROSE?")
+                   (domanda "Preferisci conoscere le TRADIZIONI del posto o vivere esperienze piu' AVVENTUROSE?")
                    (risposteValide tradizioni avventurose indifferente)
                    (precursore scarpe_costume is scarpe))
   (templateDomanda (attributo spiaggia_spa)
@@ -496,14 +530,17 @@
 )
 
 (defrule RICERCA::punteggio-albergo
-  (albergo (nome ?nome) (costoNotte ?costoNotte))
+  (albergo (nome ?nome) (stelle ?stelleAlbergo) (costoNotte ?costoNotte))
   (attributo (nome numGiorni) (valore ?giorni))
   (attributo (nome numPersone) (valore ?persone))
   (attributo (nome budget) (valore ?budget))
+  (attributo (nome numStelle) (valore ?stelleUtente))
   =>
   (bind ?budgetNotte (/ ?budget (- ?giorni 1) (div (+ ?persone 1) 2)))
   (bind ?risparmio (- ?budgetNotte ?costoNotte))
   (bind ?certezza (* 100 (- (* 2 (/ (+ ?risparmio ?budgetNotte) (+ (/ ?budgetNotte 2) ?budgetNotte))) 1)))
+  (bind ?certezza (controlla-certezza ?certezza))
+  (bind ?certezza (punteggio-stelle ?stelleUtente ?stelleAlbergo ?certezza))
   (assert (attributo (nome albergoValutato) (valore ?nome) (certezza (controlla-certezza ?certezza))))
 )
 
@@ -520,25 +557,40 @@
 (deftemplate TOUR::tour
   (multislot listaCitta)
   (multislot listaAlberghi)
+  (multislot listaStelle)
+  (multislot listaCosti)
+  (multislot listaNotti)
+  (slot nottiCompilate (default FALSE))
+  (slot costoTour (default 0))
   (slot certezza (type FLOAT)))
 
 (defrule TOUR::citta-di-partenza
   (attributo (nome cittaValutata) (valore ?citta) (certezza ?certezzaCitta))
   (attributo (nome numPersone) (valore ?persone))
   (attributo (nome numGiorni) (valore ?giorni))
-  (albergo (nome ?nomeAlbergo) (localita ?citta) (camereLibere ?n&:(> ?n (/ ?persone 2))))
+  (albergo (nome ?nomeAlbergo)
+           (localita ?citta)
+           (stelle ?stelle)
+           (costoNotte ?costoNotte)
+           (camereLibere ?n&:(>= ?n (/ (+ ?persone (mod ?persone 2)) 2))))
   (attributo (nome albergoValutato) (valore ?nomeAlbergo) (certezza ?certezzaAlbergo))
   =>
   (bind ?certezzaTappa (/ (+ ?certezzaCitta ?certezzaAlbergo) 2))
   (bind ?coefficienteTour (/ 1 (/ (+ ?giorni (mod ?giorni 2)) 2)))
   (assert (tour (listaCitta ?citta)
                 (listaAlberghi ?nomeAlbergo)
+                (listaStelle ?stelle)
+                (listaCosti ?costoNotte)
                 (certezza (* ?coefficienteTour ?certezzaTappa))))
 )
 
 (defrule TOUR::citta-successiva
   ; risolvere problema: casulità degli hotel (nella traccia "favoreggiamento")
-  ?t <- (tour (listaCitta $?cittaPrec ?cittaCorr) (listaAlberghi $?alberghiPrec ?albergoCorr) (certezza ?certezzaTour))
+  ?t <- (tour (listaCitta $?cittaPrec ?cittaCorr)
+              (listaAlberghi $?alberghiPrec ?albergoCorr)
+              (listaStelle $?stellePrec ?stelleCorr)
+              (listaCosti $?costiPrec ?costoCorr)
+              (certezza ?certezzaTour))
   (attributo (nome numGiorni) (valore ?giorni))
   (test (< (+ 1 (length$ ?cittaPrec)) (/ ?giorni 2)))
 
@@ -547,7 +599,11 @@
   (test (not (member$ ?cittaSucc ?cittaPrec)))
 
   (attributo (nome numPersone) (valore ?persone))
-  (albergo (nome ?albergoSucc) (localita ?cittaSucc) (camereLibere ?n&:(> ?n (/ ?persone 2))))
+  (albergo (nome ?albergoSucc)
+           (localita ?cittaSucc)
+           (stelle ?stelleSucc)
+           (costoNotte ?costoSucc)
+           (camereLibere ?n&:(>= ?n (/ (+ ?persone (mod ?persone 2)) 2))))
   (attributo (nome albergoValutato) (valore ?albergoSucc) (certezza ?certezzaAlbergoSucc))
 
   =>
@@ -556,11 +612,14 @@
   (bind ?coefficienteTour (/ ?numCitta (/ (+ ?giorni (mod ?giorni 2)) 2)))
   (assert (tour (listaCitta ?cittaPrec ?cittaCorr ?cittaSucc)
                 (listaAlberghi ?alberghiPrec ?albergoCorr ?albergoSucc)
+                (listaStelle ?stellePrec ?stelleCorr ?stelleSucc)
+                (listaCosti ?costiPrec ?costoCorr ?costoSucc)
                 (certezza (* ?coefficienteTour (combina-certezze ?certezzaTour ?certezzaTappaSucc)))
 
 )))
 
 (defrule TOUR::rimuovi-permutazioni-tour
+  (declare (salience 2))
   ?t1 <- (tour (listaCitta $?listaCitta1) (listaAlberghi $?listaAlberghi1))
   ?t2 <- (tour (listaCitta $?listaCitta2) (listaAlberghi $?listaAlberghi2))
   (test (eq (length$ ?listaCitta1) (length$ ?listaCitta2)))
@@ -571,6 +630,42 @@
   =>
   (retract ?t2)
 )
+
+(defrule TOUR::rimuovi-tour-ridondanti
+  (declare (salience 2))
+  ?t1 <- (tour (listaCitta $?listaCitta1) (certezza ?certezza1))
+  ?t2 <- (tour (listaCitta $?listaCitta2) (certezza ?certezza2&:(< ?certezza2 ?certezza1)))
+  (test (eq (length$ ?listaCitta1) (length$ ?listaCitta2)))
+  (test (or (subsetp (subseq$ ?listaCitta2 1 (+ 1 (div (length$ ?listaCitta2) 2))) ?listaCitta1)
+            (subsetp (subseq$ ?listaCitta2 (+ 1 (div (length$ ?listaCitta2) 2)) (length$ ?listaCitta2)) ?listaCitta1)))
+  =>
+  (retract ?t2)
+)
+
+(defrule TOUR::spartisci-notti
+  (declare (salience 1))
+  ?tour <- (tour (listaCitta $?citta)
+                 (listaAlberghi $?alberghi)
+                 (listaStelle $?stelle)
+                 (listaCosti $?costi)
+                 (nottiCompilate FALSE)
+                 (certezza ?certezza))
+  (attributo (nome numGiorni) (valore ?giorni))
+  =>
+  (bind ?notti (- ?giorni 1))
+  (bind ?nottiPerLocalita (div ?notti (length$ ?citta))
+  (bind ?nottiAvanzate (mod ?notti (length$ ?citta))))
+  (modify ?tour (listaNotti (spartisci-notti (length$ ?citta) ?nottiPerLocalita ?nottiAvanzate))
+                (nottiCompilate TRUE))
+)
+
+;(defrule TOUR::calcola-costo-complessivo
+;  ?tour <- (tour (listaCosti $?costi))
+;  (attributo (nome numPersone) (valore ?persone))
+;  (attributo (nome numGiorni) (valore ?giorni))
+;  =>
+;  (modify ?tour (costoTour (calcola-costo-tour ?costi ?persone ?giorni)))
+;)
 
 ;************************
 ; MODULO STAMPA
@@ -584,19 +679,19 @@
                   (import TOUR ?ALL)
                   (export ?ALL))
 
-(defrule STAMPA::stampa-citta
-  (declare (salience 10))
-  ?citta <- (attributo (nome cittaValutata) (valore ?nome) (certezza ?certezza))
-  (not (attributo (nome cittaValutata) (certezza ?per1&:(> ?per1 ?certezza)))) ;non esiste una citta che abbia una certezza maggiore
-  =>
-  (retract ?citta)
-  (format t " %-24s %2d%%%n" ?nome ?certezza))
-
-(defrule STAMPA::rimuovi-citta-scarse
-  (declare (salience 20))
-  ?citta <- (attributo (nome cittaValutata) (certezza ?per&:(< ?per 80)))
-  =>
-  (retract ?citta))
+;(defrule STAMPA::stampa-citta
+;  (declare (salience 10))
+;  ?citta <- (attributo (nome cittaValutata) (valore ?nome) (certezza ?certezza))
+;  (not (attributo (nome cittaValutata) (certezza ?per1&:(> ?per1 ?certezza)))) ;non esiste una citta che abbia una certezza maggiore
+;  =>
+;  (retract ?citta)
+;  (format t " %-24s %2d%%%n" ?nome ?certezza))
+;
+;(defrule STAMPA::rimuovi-citta-scarse
+;  (declare (salience 20))
+;  ?citta <- (attributo (nome cittaValutata) (certezza ?per&:(< ?per 80)))
+;  =>
+;  (retract ?citta))
 
 ;(defrule STAMPA::stampa-punteggio
 ;  ?punteggio <- (attributo (nome ?tipologia&:(or (eq ?tipologia balneare)
@@ -615,28 +710,40 @@
 
 (defrule STAMPA::stampa-tour
   (declare (salience 10))
-  ?tour <- (tour (listaCitta $?lista) (listaAlberghi $?alberghi) (certezza ?certezza))
+  ?s <- (soluzioni ?soluzioni&:(< ?soluzioni 5))
+  ?tour <- (tour (listaCitta $?citta)
+                 (listaAlberghi $?alberghi)
+                 (listaStelle $?stelle)
+                 (listaCosti $?costi)
+                 (listaNotti $?notti)
+                 (certezza ?certezza))
   (not (tour (certezza ?certezza1&:(> ?certezza1 ?certezza))))
   =>
   (retract ?tour)
-  (stampa-tour ?lista ?alberghi ?certezza))
+  (bind ?soluzioni (+ 1 ?soluzioni))
+  (stampa-tour ?soluzioni ?citta ?alberghi ?stelle ?costi ?notti ?certezza)
+  (retract ?s)
+  (assert (soluzioni ?soluzioni))
+)
 
-(defrule STAMPA::rimuovi-tour-scarsi
-  (declare (salience 20))
-  ?tour <- (tour (certezza ?certezza&:(< ?certezza 80)))
-  =>
-  (retract ?tour))
+;(defrule STAMPA::rimuovi-tour-scarsi
+;  (declare (salience 20))
+;  ?tour <- (tour (certezza ?certezza&:(< ?certezza 80)))
+;  =>
+;  (retract ?tour))
 
-(defrule STAMPA::stampa-albergo
-  (declare (salience 10))
-  ?albergo <- (attributo (nome albergoValutato) (valore ?nome) (certezza ?certezza))
-  (not (attributo (nome albergoValutato) (certezza ?per1&:(> ?per1 ?certezza)))) ;non esiste una citta che abbia una certezza maggiore
-  =>
-  (retract ?albergo)
-  (format t " %-24s %2d%%%n" ?nome ?certezza))
+;(defrule STAMPA::stampa-albergo
+;  (declare (salience 10))
+;  ?albergo <- (attributo (nome albergoValutato) (valore ?nome) (certezza ?certezza))
+;  (not (attributo (nome albergoValutato) (certezza ?per1&:(> ?per1 ?certezza)))) ;non esiste una citta che abbia una certezza maggiore
+;  =>
+;  (retract ?albergo)
+;  (format t " %-24s %2d%%%n" ?nome ?certezza)
+;)
+
 
 (defrule STAMPA::rimuovi-alberghi-scarsi
   (declare (salience 20))
-  ?albergo <- (attributo (nome albergoValutato) (certezza ?per&:(< ?per 80)))
+  ?albergo <- (attributo (nome albergoValutato) (certezza ?per&:(< ?per 50)))
   =>
   (retract ?albergo))
