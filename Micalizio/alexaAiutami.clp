@@ -51,7 +51,7 @@
 
    ?risposta)
 
-(deffunction MAIN::calcola-certezza(?c1 ?c2)
+(deffunction MAIN::combina-certezze(?c1 ?c2)
   (bind ?nuovaCertezza 0)
   (bind ?c1 (/ ?c1 100))
   (bind ?c2 (/ ?c2 100))
@@ -82,12 +82,6 @@
 
 (deffunction MAIN::stampa-tour(?listaCitta ?listaAlberghi ?certezza)
   (printout t ?listaCitta crlf ?listaAlberghi " con certezza del " ?certezza "%" crlf)
-)
-
-(deffunction MAIN::coefficiente-tour(?giorni ?certezza ?numCitta)
-  (if (eq 0 (mod ?giorni 2)) then (bind ?risultato (* ?certezza (/ ?numCitta (/ ?giorni 2)))))
-  (if (eq 1 (mod ?giorni 2)) then (bind ?risultato (* ?certezza (/ ?numCitta (/ (+ ?giorni 1) 2)))))
-  ?risultato
 )
 
 ;****************************
@@ -197,7 +191,7 @@
   (test (neq ?attr1 ?attr2))
   =>
   (retract ?attr1)
-  (modify ?attr2 (certezza (calcola-certezza ?c1 ?c2))))
+  (modify ?attr2 (certezza (combina-certezze ?c1 ?c2))))
 
 
 (deffacts REGOLE::regole-tour
@@ -534,9 +528,13 @@
   (attributo (nome numGiorni) (valore ?giorni))
   (albergo (nome ?nomeAlbergo) (localita ?citta) (camereLibere ?n&:(> ?n (/ ?persone 2))))
   (attributo (nome albergoValutato) (valore ?nomeAlbergo) (certezza ?certezzaAlbergo))
-  (not (tour (listaCitta ?citta ?$)))
   =>
-  (assert (tour (listaCitta ?citta) (listaAlberghi ?nomeAlbergo) (certezza (coefficiente-tour ?giorni (/ (+ ?certezzaCitta ?certezzaAlbergo) 2) 1)))))
+  (bind ?certezzaTappa (/ (+ ?certezzaCitta ?certezzaAlbergo) 2))
+  (bind ?coefficienteTour (/ 1 (/ (+ ?giorni (mod ?giorni 2)) 2)))
+  (assert (tour (listaCitta ?citta)
+                (listaAlberghi ?nomeAlbergo)
+                (certezza (* ?coefficienteTour ?certezzaTappa))))
+)
 
 (defrule TOUR::citta-successiva
   ; risolvere problema: casulità degli hotel (nella traccia "favoreggiamento")
@@ -553,14 +551,26 @@
   (attributo (nome albergoValutato) (valore ?albergoSucc) (certezza ?certezzaAlbergoSucc))
 
   =>
+  (bind ?certezzaTappaSucc (/ (+ ?certezzaCittaSucc ?certezzaAlbergoSucc) 2))
+  (bind ?numCitta (+ 2 (length$ ?cittaPrec)))
+  (bind ?coefficienteTour (/ ?numCitta (/ (+ ?giorni (mod ?giorni 2)) 2)))
   (assert (tour (listaCitta ?cittaPrec ?cittaCorr ?cittaSucc)
                 (listaAlberghi ?alberghiPrec ?albergoCorr ?albergoSucc)
-                ;(certezza (/ (+ ?certezzaTour (/ (+ ?certezzaCittaSucc ?certezzaAlbergoSucc) 2)) 2))))
-                (certezza (coefficiente-tour ?giorni
-                                             (calcola-certezza ?certezzaTour (/ (+ ?certezzaCittaSucc ?certezzaAlbergoSucc) 2)) 
-                                             (+ 1 (length$ ?cittaPrec))))
+                (certezza (* ?coefficienteTour (combina-certezze ?certezzaTour ?certezzaTappaSucc)))
 
 )))
+
+(defrule TOUR::rimuovi-permutazioni-tour
+  ?t1 <- (tour (listaCitta $?listaCitta1) (listaAlberghi $?listaAlberghi1))
+  ?t2 <- (tour (listaCitta $?listaCitta2) (listaAlberghi $?listaAlberghi2))
+  (test (eq (length$ ?listaCitta1) (length$ ?listaCitta2)))
+  (test (neq ?listaCitta1 ?listaCitta2))
+  (test (neq ?listaAlberghi1 ?listaAlberghi2))
+  (test (subsetp ?listaCitta1 ?listaCitta2))
+  (test (subsetp ?listaAlberghi1 ?listaAlberghi2))
+  =>
+  (retract ?t2)
+)
 
 ;************************
 ; MODULO STAMPA
@@ -613,7 +623,7 @@
 
 (defrule STAMPA::rimuovi-tour-scarsi
   (declare (salience 20))
-  ?tour <- (tour (certezza ?certezza&:(< ?certezza 0)))
+  ?tour <- (tour (certezza ?certezza&:(< ?certezza 80)))
   =>
   (retract ?tour))
 
