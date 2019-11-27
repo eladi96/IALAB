@@ -94,7 +94,15 @@ goal:-  assegna_materia_docente(profArte, arte),
 %*#TODO integrity constraint????
 Quello che non può accedere è che:
 1) un'aula risulti non assegnata.
-2) un docente risulti senza materia assegnata, ma può essere libero.
+2) un docente risulti senza materia assegnata, ma può essere libero.+
+3) due aule assegnate ad una materia che sia diversa da lettere
+4) una lezione di lab venga assegnata ad un'aula e non ad un lab, e viceversa
+5) vi siano due lezioni nelle stesse aule lo stesso giorno e la stessa ora
+6) lo stesso docente abbia due lezioni contemporaneamente in aule diverse
+7) la stessa classe abbia due lezioni contemporaneamente in aule diverse
+8) una classe abbia meno di 30 ore settimanali di lezione
+9) le classi A abbiano diritto alla mensa
+
 *%
 
 
