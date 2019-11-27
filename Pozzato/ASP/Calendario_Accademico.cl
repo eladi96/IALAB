@@ -92,8 +92,9 @@ goal:-  assegna_materia_docente(profArte, arte),
 
 
 %*#TODO integrity constraint????
-1) Quello che non può accedere è che un aula risulti non assegnata.
-2) Quello che non può accedere è che un docente risulti senza materia assegnata, ma può essere libero.
+Quello che non può accedere è che:
+1) un'aula risulti non assegnata.
+2) un docente risulti senza materia assegnata, ma può essere libero.
 *%
 
 
