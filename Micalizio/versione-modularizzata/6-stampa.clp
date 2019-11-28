@@ -38,6 +38,15 @@
 ;  (retract ?punteggio)
 ;  (format t " %-24s %d %2d%%%n" ?tipologia ?b ?cb)
 ;)
+(defrule STAMPA::continua-ricerca
+  (declare (salience 1))
+  (soluzioni ?soluzioni&:(> ?soluzioni 0))
+  =>
+  (assert (attributo (nome continuaRicerca)
+                     (valore (chiedi-domanda "Vuoi raffinare la tua ricerca?" (create$ si no)))))
+  
+  (focus DOMANDESECONDARIE)
+  )
 
 (defrule STAMPA::stampa-tour
   (declare (salience 10))
@@ -56,6 +65,7 @@
   (retract ?tour)
   (retract ?s)
   (assert (soluzioni ?soluzioni))
+
 )
 
 (defrule STAMPA::rimuovi-tour-scarsi

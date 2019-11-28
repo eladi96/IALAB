@@ -1,4 +1,4 @@
-(load "0-dominio_grande.clp")
+(load "0-dominio.clp")
 (load "1-main.clp")
 (load "2-domande.clp")
 (load "3-regole.clp")
