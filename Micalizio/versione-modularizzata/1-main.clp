@@ -19,7 +19,7 @@
          DOMANDE
          DOMANDEPRINCIPALI
          REGOLE
-         RICERCA
+         PUNTEGGIO
          TOUR
          STAMPA))
 

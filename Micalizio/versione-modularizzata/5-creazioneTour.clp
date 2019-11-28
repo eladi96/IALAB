@@ -6,7 +6,7 @@
                 (import DOMANDEPRINCIPALI ?ALL)
                 (import DOMINIO ?ALL)
                 (import REGOLE ?ALL)
-                (import RICERCA ?ALL) (export ?ALL))
+                (import PUNTEGGIO ?ALL) (export ?ALL))
 
 (deftemplate TOUR::tour
   (multislot listaCitta)
