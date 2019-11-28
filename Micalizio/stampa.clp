@@ -6,7 +6,7 @@
                   (import DOMANDEPRINCIPALI ?ALL)
                   (import DOMINIO ?ALL)
                   (import REGOLE ?ALL)
-                  (import RICERCA ?ALL)
+                  (import PUNTEGGIO ?ALL)
                   (import TOUR ?ALL)
                   (export ?ALL))
 
