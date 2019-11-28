@@ -645,26 +645,27 @@
 
 )))
 
-(defrule TOUR::rimuovi-permutazioni-tour
-  (declare (salience 3))
-  ?t1 <- (tour (listaCitta $?listaCitta1) (listaAlberghi $?listaAlberghi1))
-  ?t2 <- (tour (listaCitta $?listaCitta2) (listaAlberghi $?listaAlberghi2))
-  (test (eq (length$ ?listaCitta1) (length$ ?listaCitta2)))
-  (test (neq ?listaCitta1 ?listaCitta2))
-  (test (neq ?listaAlberghi1 ?listaAlberghi2))
-  (test (subsetp ?listaCitta1 ?listaCitta2))
-  (test (subsetp ?listaAlberghi1 ?listaAlberghi2))
-  =>
-  (retract ?t2)
-)
+;(defrule TOUR::rimuovi-permutazioni-tour
+;  (declare (salience 4))
+;  ?t1 <- (tour (listaCitta $?listaCitta1) (listaAlberghi $?listaAlberghi1))
+;  ?t2 <- (tour (listaCitta $?listaCitta2) (listaAlberghi $?listaAlberghi2))
+;  ;(test (neq ?t1 ?t2))
+;  (test (eq (length$ ?listaCitta1) (length$ ?listaCitta2)))
+;  (test (neq ?listaCitta1 ?listaCitta2))
+;  (test (neq ?listaAlberghi1 ?listaAlberghi2))
+;  (test (subsetp ?listaCitta1 ?listaCitta2))
+;  =>
+;  (retract ?t2)
+;)
 
 (defrule TOUR::rimuovi-tour-ridondanti
   (declare (salience 3))
   ?t1 <- (tour (listaCitta $?listaCitta1) (certezza ?certezza1))
-  ?t2 <- (tour (listaCitta $?listaCitta2) (certezza ?certezza2&:(< ?certezza2 ?certezza1)))
+  ?t2 <- (tour (listaCitta $?listaCitta2) (certezza ?certezza2&:(<= ?certezza2 ?certezza1)))
+  (test (neq ?t1 ?t2))
   (test (eq (length$ ?listaCitta1) (length$ ?listaCitta2)))
   (test (or (subsetp (subseq$ ?listaCitta2 1 (+ 1 (div (length$ ?listaCitta2) 2))) ?listaCitta1)
-            (subsetp (subseq$ ?listaCitta2 (div (length$ ?listaCitta2) 2) (length$ ?listaCitta2)) ?listaCitta1)))
+            (subsetp (subseq$ ?listaCitta2 (+ 1 (div (length$ ?listaCitta2) 2)) (length$ ?listaCitta2)) ?listaCitta1)))
   =>
   (retract ?t2)
 )
@@ -754,11 +755,11 @@
   (assert (soluzioni ?soluzioni))
 )
 
-;(defrule STAMPA::rimuovi-tour-scarsi
-;  (declare (salience 20))
-;  ?tour <- (tour (certezza ?certezza&:(< ?certezza 80)))
-;  =>
-;  (retract ?tour))
+(defrule STAMPA::rimuovi-tour-scarsi
+  (declare (salience 20))
+  ?tour <- (tour (certezza ?certezza&:(< ?certezza 80)))
+  =>
+  (retract ?tour))
 
 ;(defrule STAMPA::stampa-albergo
 ;  (declare (salience 10))
