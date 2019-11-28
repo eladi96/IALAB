@@ -81,9 +81,9 @@
   ?dist
 )
 
-(deffunction MAIN::stampa-tour(?numeroTour ?listaCitta ?listaAlberghi ?listaStelle ?listaCosti ?listaNotti ?certezza)
+(deffunction MAIN::stampa-tour(?numeroTour ?listaCitta ?listaAlberghi ?listaStelle ?listaCosti ?listaNotti ?certezza ?costoComplessivo)
   (bind ?i 1)
-  (format t "%nTOUR %-2d - PUNTEGGIO: %-3.2f%n%n" ?numeroTour ?certezza)
+  (format t "%nTOUR %-2d - PUNTEGGIO: %-3.2f - COSTO TOT.: %-7.2f%n%n" ?numeroTour ?certezza ?costoComplessivo)
   (format t "          CITTA                    ALBERGO          STELLE    COSTO NOTTE      NOTTI%n" )
   (while (<= ?i (length$ ?listaCitta)) do
     (bind ?citta (nth$ ?i ?listaCitta))
@@ -103,7 +103,7 @@
   ?certezza
 )
 
-(deffunction MAIN::spartisci-notti(?numLocalita ?nottiPerLocalita ?nottiAvanzate)
+(deffunction MAIN::spartisci-notti(?numLocalita ?nottiPerLocalita ?nottiAvanzate ?costoNotte)
   (bind ?listaNotti (create$ ))
   (bind ?i 1)
   (while (<= ?i ?numLocalita) do
@@ -115,7 +115,34 @@
     )
     (bind ?i (+ 1 ?i))
   )
+
+  (bind ?i 1)
+  (while (< ?i ?numLocalita) do
+    (bind ?j (+ ?i 1))
+    (while (<= ?j ?numLocalita) do
+      (if (and (> (nth$ ?i ?costoNotte) (nth$ ?j ?costoNotte))
+               (> (nth$ ?i ?listaNotti) (nth$ ?j ?listaNotti))
+          ) then
+        (bind ?temp (nth$ ?i ?listaNotti))
+        (bind ?listaNotti (replace$ ?listaNotti ?i ?i (nth$ ?j ?listaNotti)))
+        (bind ?listaNotti (replace$ ?listaNotti ?j ?j ?temp))
+      )
+      (bind ?j (+ 1 ?j))
+    )
+    (bind ?i (+ 1 ?i))
+  )
+
   ?listaNotti
+)
+
+(deffunction MAIN::calcola-costo-tour(?costi ?persone ?notti)
+  (bind ?costoComplessivo 0)
+  (bind ?i 1)
+  (while (<= ?i (length$ ?costi)) do
+    (bind ?costoComplessivo (+ ?costoComplessivo (* (nth$ ?i ?notti) (nth$ ?i ?costi) (+ (div ?persone 2) (mod ?persone 2)))))
+    (bind ?i (+ ?i 1))
+  )
+  ?costoComplessivo
 )
 
 ;****************************
@@ -619,7 +646,7 @@
 )))
 
 (defrule TOUR::rimuovi-permutazioni-tour
-  (declare (salience 2))
+  (declare (salience 3))
   ?t1 <- (tour (listaCitta $?listaCitta1) (listaAlberghi $?listaAlberghi1))
   ?t2 <- (tour (listaCitta $?listaCitta2) (listaAlberghi $?listaAlberghi2))
   (test (eq (length$ ?listaCitta1) (length$ ?listaCitta2)))
@@ -632,18 +659,18 @@
 )
 
 (defrule TOUR::rimuovi-tour-ridondanti
-  (declare (salience 2))
+  (declare (salience 3))
   ?t1 <- (tour (listaCitta $?listaCitta1) (certezza ?certezza1))
   ?t2 <- (tour (listaCitta $?listaCitta2) (certezza ?certezza2&:(< ?certezza2 ?certezza1)))
   (test (eq (length$ ?listaCitta1) (length$ ?listaCitta2)))
   (test (or (subsetp (subseq$ ?listaCitta2 1 (+ 1 (div (length$ ?listaCitta2) 2))) ?listaCitta1)
-            (subsetp (subseq$ ?listaCitta2 (+ 1 (div (length$ ?listaCitta2) 2)) (length$ ?listaCitta2)) ?listaCitta1)))
+            (subsetp (subseq$ ?listaCitta2 (div (length$ ?listaCitta2) 2) (length$ ?listaCitta2)) ?listaCitta1)))
   =>
   (retract ?t2)
 )
 
 (defrule TOUR::spartisci-notti
-  (declare (salience 1))
+  (declare (salience 2))
   ?tour <- (tour (listaCitta $?citta)
                  (listaAlberghi $?alberghi)
                  (listaStelle $?stelle)
@@ -655,17 +682,17 @@
   (bind ?notti (- ?giorni 1))
   (bind ?nottiPerLocalita (div ?notti (length$ ?citta))
   (bind ?nottiAvanzate (mod ?notti (length$ ?citta))))
-  (modify ?tour (listaNotti (spartisci-notti (length$ ?citta) ?nottiPerLocalita ?nottiAvanzate))
+  (modify ?tour (listaNotti (spartisci-notti (length$ ?citta) ?nottiPerLocalita ?nottiAvanzate ?costi))
                 (nottiCompilate TRUE))
 )
 
-;(defrule TOUR::calcola-costo-complessivo
-;  ?tour <- (tour (listaCosti $?costi))
-;  (attributo (nome numPersone) (valore ?persone))
-;  (attributo (nome numGiorni) (valore ?giorni))
-;  =>
-;  (modify ?tour (costoTour (calcola-costo-tour ?costi ?persone ?giorni)))
-;)
+(defrule TOUR::calcola-costo-complessivo
+  (declare (salience 1))
+  ?tour <- (tour (listaCosti $?costi) (listaNotti $?notti) (nottiCompilate TRUE) (costoTour 0))
+  (attributo (nome numPersone) (valore ?persone))
+  =>
+  (modify ?tour (costoTour (calcola-costo-tour ?costi ?persone ?notti)))
+)
 
 ;************************
 ; MODULO STAMPA
@@ -716,12 +743,13 @@
                  (listaStelle $?stelle)
                  (listaCosti $?costi)
                  (listaNotti $?notti)
+                 (costoTour ?costotot)
                  (certezza ?certezza))
   (not (tour (certezza ?certezza1&:(> ?certezza1 ?certezza))))
   =>
-  (retract ?tour)
   (bind ?soluzioni (+ 1 ?soluzioni))
-  (stampa-tour ?soluzioni ?citta ?alberghi ?stelle ?costi ?notti ?certezza)
+  (stampa-tour ?soluzioni ?citta ?alberghi ?stelle ?costi ?notti ?certezza ?costotot)
+  (retract ?tour)
   (retract ?s)
   (assert (soluzioni ?soluzioni))
 )
