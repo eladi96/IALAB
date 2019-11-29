@@ -76,8 +76,21 @@
 ;******************************
 (defmodule DOMANDESECONDARIE (import MAIN ?ALL) (import DOMANDE ?ALL) (export ?ALL))
 
+(defrule DOMANDESECONDARIE::elimina-tour-precedenti
+  ?t <- (tour)
+  =>
+  (retract ?t)
+)
+
+(defrule DOMANDESECONDARIE::elimina-alberghi-precedenti
+  ?a <- (attributo (nome albergoValutato))
+  =>
+  (retract ?a)
+)
+
 (defrule DOMANDESECONDARIE::domande-secondarie
-  (attributo (nome continuaRicerca) (valore si))
+  ?r <- (attributo (nome continuaRicerca) (valore si))
+
   =>
   (assert (templateDomanda (attributo tradizione_avventura)
                    (domanda "Preferisci conoscere le TRADIZIONI del posto o vivere esperienze piu' AVVENTUROSE?")
@@ -93,14 +106,13 @@
                    (precursore numStelle is no)))
   (assert (templateDomanda (attributo regioneDaEvitare)
                    (domanda "Vuoi evitare una regione in particolare?")
-                   (risposteValide valledaosta piemonte lombardia veneto liguria trentino veneto emiliaromagna toscana umbria abruzzo lazio campania marche puglia basilicata calabria sicilia sardegna)
-                   (precursore spiaggia_spa is indifferente)))
+                   (risposteValide valledaosta piemonte lombardia veneto liguria trentino veneto emiliaromagna toscana umbria abruzzo lazio campania marche puglia basilicata calabria sicilia sardegna no)))
 
- (focus DOMANDE
-        REGOLE
-        PUNTEGGIO
-        TOUR
-        STAMPA)
-
-
+  (retract ?r)
+  
+  (focus DOMANDE
+         REGOLE
+         PUNTEGGIO
+         TOUR
+         STAMPA)
 )

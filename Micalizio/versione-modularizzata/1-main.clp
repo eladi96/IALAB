@@ -15,6 +15,7 @@
   =>
   (set-fact-duplication TRUE)
   (assert (soluzioni 0))
+  (assert (fase 1))
   (focus DOMINIO
          DOMANDE
          DOMANDEPRINCIPALI

@@ -40,11 +40,15 @@
 ;)
 (defrule STAMPA::continua-ricerca
   (declare (salience 1))
-  (soluzioni ?soluzioni&:(> ?soluzioni 0))
+  ?s <- (soluzioni ?soluzioni&:(> ?soluzioni 0))
+  ?f <- (fase 1)
   =>
   (assert (attributo (nome continuaRicerca)
                      (valore (chiedi-domanda "Vuoi raffinare la tua ricerca?" (create$ si no)))))
-  
+
+  (retract ?s ?f)
+  (assert (soluzioni 0) (fase 2))
+
   (focus DOMANDESECONDARIE)
   )
 
