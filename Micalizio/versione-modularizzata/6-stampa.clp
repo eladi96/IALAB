@@ -45,11 +45,10 @@
   =>
   (assert (attributo (nome continuaRicerca)
                      (valore (chiedi-domanda "Vuoi raffinare la tua ricerca?" (create$ si no)))))
-
-  (retract ?s ?f)
-  (assert (soluzioni 0) (fase 2))
-
-  (focus DOMANDESECONDARIE)
+  (if (any-factp ((?r attributo)) (and (eq ?r:nome continuaRicerca) (eq ?r:valore si))) then
+      (retract ?s ?f)
+      (assert (soluzioni 0) (fase 2))
+      (focus DOMANDESECONDARIE))
   )
 
 (defrule STAMPA::stampa-tour

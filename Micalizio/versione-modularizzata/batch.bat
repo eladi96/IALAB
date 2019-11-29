@@ -5,5 +5,6 @@
 (load "4-punteggio.clp")
 (load "5-creazioneTour.clp")
 (load "6-stampa.clp")
+(load "7-domandeSecondarie.clp")
 (reset)
 (run)
