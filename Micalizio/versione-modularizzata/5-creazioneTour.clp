@@ -31,11 +31,11 @@
 
   ;(attributo (nome regioneDaEvitare) (valore ?regioneDaEvitare))
 
-  (localita (nome ?citta) (regione ?regione))
-
+  ;(localita (nome ?citta) (regione ?regione))
+  ;(localita (nome ?citta) (regione ?regione&:(neq ?regione ?regioneDaEvitare)))
   ;(or (exists (attributo (nome regioneDaEvitare) (valore ?regioneDaEvitare&:(neq ?regione ?regioneDaEvitare))))
   ;    (not (exists (attributo (nome regioneDaEvitare) (valore ?regioneDaEvitare)))))
-  ;(localita (nome ?citta) (regione ?regione&:(neq ?regione ?regioneDaEvitare)))
+
   =>
   (bind ?certezzaTappa (/ (+ ?certezzaCitta ?certezzaAlbergo) 2))
   (bind ?coefficienteTour (/ 1 (/ (+ ?giorni (mod ?giorni 2)) 2)))
@@ -131,7 +131,7 @@
 )
 
 (defrule TOUR::rimuovi-tour-regioneDaEvitare
-  (declare (salience 3))
+  (declare (salience 4))
   (attributo (nome regioneDaEvitare) (valore ?regione))
   (localita (nome ?citta) (regione ?regione))
   ?t <- (tour (listaCitta $?listaCitta))
