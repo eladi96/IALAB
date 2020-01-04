@@ -85,7 +85,7 @@
 (deffunction MAIN::stampa-tour(?numeroTour ?listaCitta ?listaAlberghi ?listaStelle ?listaCosti ?listaNotti ?certezza ?costoComplessivo)
   (bind ?i 1)
   (format t "%nTOUR %-2d - PUNTEGGIO: %-3.2f - COSTO TOT.: %-7.2f%n%n" ?numeroTour ?certezza ?costoComplessivo)
-  (format t "          CITTA                    ALBERGO          STELLE    COSTO NOTTE      NOTTI%n" )
+  (format t "          CITTA                    ALBERGO          STELLE    COSTO NOTTE     NOTTI%n" )
   (while (<= ?i (length$ ?listaCitta)) do
     (bind ?citta (nth$ ?i ?listaCitta))
     (bind ?albergo (nth$ ?i ?listaAlberghi))
