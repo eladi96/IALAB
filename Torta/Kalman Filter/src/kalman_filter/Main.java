@@ -9,13 +9,15 @@ import org.apache.commons.math3.filter.DefaultProcessModel;
 import org.apache.commons.math3.random.JDKRandomGenerator;
 import org.apache.commons.math3.random.RandomGenerator;
 
+import java.awt.desktop.SystemSleepEvent;
+import java.io.FileWriter;
+import java.io.IOException;
 
 /*
 Inputs: u, z
 Outputs: x, p
 Costanti: A, B, H, Q, R
  */
-
 public class Main {
 
     public static void main(String[] args) {
@@ -24,11 +26,45 @@ public class Main {
 
         // intervallo di tempo discreto
         double dt = 0.1d;
-        // rumore di osservazione per la posizione (m)
-        double measurementNoise = 10d;
-        // rumore dell'accelerazione (m/s^2)
-        double accelNoise = 0.2d;
+        // rumore di osservazione per la posizione
+        double[] measurementNoise = new double[]{0.0000001d, 10d, 100d};
 
+        // tre matrici di covarianza per la transizione (errore basso, medio, alto)
+        RealMatrix nullo = new Array2DRowRealMatrix(new double[][]{
+                {0.01, 0},
+                {0, 0.01}});
+        RealMatrix medio = new Array2DRowRealMatrix(new double[][]{
+                {10, 0},
+                {0, 10}});
+        RealMatrix alto = new Array2DRowRealMatrix(new double[][]{
+                {100, 0},
+                {0, 100}});
+        RealMatrix[] noiseCov = new RealMatrix[]{nullo, medio, alto};
+
+        //TODO-> variare la P0 iniziale dello stato
+        //TODO facoltativo -> simulare un processo (più o meno) non lineare e vedere come si comporta il KF
+
+        System.out.format("%5s", "Stato");
+        System.out.format("%15s", "Posizione");
+        System.out.format("%15s", "Posizione Kalman");
+        System.out.format("%15s", "Velocità");
+        System.out.format("%15s", "Velocità Kalman");
+        System.out.format("%15s", "Errore Pos");
+        System.out.format("%15s", "Errore Vel");
+        System.out.format("%15s", "KalmanGain");
+
+        //System.out.println("Stato \t Posizione \t Posizione kalman \t Velocità \t Velocita kalman \t ErrorePos \t ErroreVel \t KalmanGain");
+        experiment(dt, measurementNoise[2], noiseCov[2]);
+        /*for (double m : measurementNoise) {
+            for (RealMatrix cov : noiseCov) {
+                experiment(dt, m, cov);
+            }
+        }*/
+
+
+    }
+
+    private static void experiment(double dt, double measurementNoise, RealMatrix noiseCov) {
         // Matrice di transizione di stato.
         // Fondamentalmente, moltiplica lo stato per questo e aggiungi i fattori di controllo e otterrai una previsione dello stato per il passaggio successivo.
         // A = [ 1 dt ]
@@ -54,12 +90,7 @@ public class Main {
 
         //PER IL KALMAN GAIN: Q e R
         // Covarianza stimata dell'errore di processo.
-        // Q = [ dt^4/4 dt^3/2 ]
-        //     [ dt^3/2 dt^2   ]
-        RealMatrix tmp = new Array2DRowRealMatrix(new double[][]{
-                {Math.pow(dt, 4d) / 4d, Math.pow(dt, 3d) / 2d},
-                {Math.pow(dt, 3d) / 2d, Math.pow(dt, 2d)}});
-        RealMatrix Q = tmp.scalarMultiply(Math.pow(accelNoise, 2));
+        RealMatrix Q = noiseCov;
 
         // Covarianza dell'errore di misura stimata.
         // R = [ measurementNoise^2 ]
@@ -106,7 +137,7 @@ public class Main {
             filter.predict(u);
 
             // calcolo il rumore gaussiano per le transizioni di stato
-            RealVector pNoise = tmpPNoise.mapMultiply(accelNoise * rand.nextGaussian());
+            RealVector pNoise = tmpPNoise.mapMultiply(measurementNoise * rand.nextGaussian());
 
             // x = A * x + B * u + pNoise
             x = A.operate(x).add(B.operate(u)).add(pNoise);
@@ -130,15 +161,42 @@ public class Main {
             double position = filter.getStateEstimation()[0];
             double velocity = filter.getStateEstimation()[1];
 
-            System.out.println("Stato " + (i + 1));
-            System.out.println("Posizione: " + x.getEntry(0));
-            System.out.println("Posizione stimata con kalman: " + position);
-            System.out.println("Velocità: " + x.getEntry(1));
-            System.out.println("Velocita stimata con kalman': " + velocity);
-            System.out.println("Errore del processo per la posizione: " + Math.abs(x.getEntry(0) - position));
-            System.out.println("Errore del processo per la velocità: " + Math.abs(x.getEntry(1) - velocity));
-            System.out.println("KalmanGain: " + kalmanGain.getEntry(0, 0) + "\n");
-            System.out.println();
+            risultati(i, x, position, velocity, kalmanGain);
+
+        }
+    }
+
+    private static void risultati(int i, RealVector x, double position, double velocity, RealMatrix k_gain) {
+        /*FileWriter writer = null;
+        try {
+            writer = new FileWriter("risultati_KalmanFilter.csv");
+            writer.write("Stato %s Posizione %s Posizione kalman %s Velocità %s Velocita kalman %s ErrorePos %s ErroreVel %s KalmanGain");
+            writer.write();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }*/
+
+        System.out.format("%d %1.13f %1.13f %1.13f %1.13f %1.13f %1.13f %1.13f", i, x.getEntry(0), position, x.getEntry(1), velocity, Math.abs(x.getEntry(0) - position), Math.abs(x.getEntry(1) - velocity), k_gain.getEntry(0, 0));
+//        System.out.println("Stato " + (i + 1));
+//        System.out.println("Posizione: " + x.getEntry(0));
+//        System.out.println("Posizione stimata con kalman: " + position);
+//        System.out.println("Velocità: " + x.getEntry(1));
+//        System.out.println("Velocita stimata con kalman': " + velocity);
+//        System.out.println("Errore del processo per la posizione: " + Math.abs(x.getEntry(0) - position));
+//        System.out.println("Errore del processo per la velocità: " + Math.abs(x.getEntry(1) - velocity));
+//        System.out.println("KalmanGain: " + k_gain.getEntry(0, 0) + "\n");
+        System.out.println();
+
+    }
+
+    private void printMatrix(RealMatrix M) {
+        System.out.println("\nM:");
+        for (int i = 0; i < M.getRowDimension(); i++) {
+            for (int j = 0; j < M.getColumnDimension(); j++) {
+                System.out.print(M.getEntry(i, j) + " ");
+            }
+            System.out.print("\n");
         }
     }
 }
