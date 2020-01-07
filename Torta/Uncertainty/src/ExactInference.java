@@ -17,8 +17,8 @@ public class ExactInference {
         List<RandomVariable> VARS = reverse(bn.getVariablesInTopologicalOrder());
         // In hidden avremo tutte le variabili che non sono parte dell'evidenza
         Set<RandomVariable> hidden = new HashSet<>();
-        for (RandomVariable var: VARS) {
-            if((!Arrays.asList(e).contains(var)))
+        for (RandomVariable var : VARS) {
+            if ((!Arrays.asList(e).contains(var)))
                 hidden.add(var);
         }
 
@@ -45,9 +45,9 @@ public class ExactInference {
         List<RandomVariable> VARS = new ArrayList<RandomVariable>(bn.getVariablesInTopologicalOrder());
         // Popoliamo la lista delle variabili non map
         Set<RandomVariable> non_map = new HashSet<RandomVariable>();
-        for (RandomVariable var: VARS) {
-            if((!Arrays.asList(map_var).contains(var) && !Arrays.asList(e).contains(var)))
-            non_map.add(var);
+        for (RandomVariable var : VARS) {
+            if ((!Arrays.asList(map_var).contains(var) && !Arrays.asList(e).contains(var)))
+                non_map.add(var);
         }
 
         // Costruiamo i fattori di tutte le variabili
@@ -85,13 +85,12 @@ public class ExactInference {
             if (f.contains(var)) {
                 toMultiply.add(f);
             } else {
-                // This factor does not contain the variable
-                // so no need to sum out - see AIMA3e pg. 527.
                 summedOutFactors.add(f);
             }
         }
 
-        summedOutFactors.add(internalSumOut((ProbabilityTable) pointwiseProduct(toMultiply), var));
+        if (!toMultiply.isEmpty())
+            summedOutFactors.add(internalSumOut((ProbabilityTable) pointwiseProduct(toMultiply), var));
 
         return summedOutFactors;
     }
@@ -106,8 +105,6 @@ public class ExactInference {
         if (1 == summedOut.getValues().length) {
             summedOut.getValues()[0] = table.getSum();
         } else {
-            // Otherwise need to iterate through this distribution
-            // to calculate the summed out distribution.
             final Object[] termValues = new Object[summedOut.getArgumentVariables()
                     .size()];
             ProbabilityTable.Iterator di = new ProbabilityTable.Iterator() {
@@ -141,12 +138,13 @@ public class ExactInference {
             }
         }
 
-        maxedOutFactors.add(internalMaxOut((ProbabilityTable) pointwiseProduct(toMultiply), var));
+        if (!toMultiply.isEmpty())
+            maxedOutFactors.add(internalMaxOut((ProbabilityTable) pointwiseProduct(toMultiply), var));
 
         return maxedOutFactors;
     }
 
-    private Factor internalMaxOut(ProbabilityTable table, RandomVariable... vars){
+    private Factor internalMaxOut(ProbabilityTable table, RandomVariable... vars) {
 
         Set<RandomVariable> moutVars = new LinkedHashSet<RandomVariable>(
                 table.getArgumentVariables());
@@ -157,8 +155,6 @@ public class ExactInference {
         if (1 == maxedOut.getValues().length) {
             maxedOut.getValues()[0] = Math.max(table.getValues()[0], table.getValues()[1]);
         } else {
-            // Otherwise need to iterate through this distribution
-            // to calculate the summed out distribution.
             final Object[] termValues = new Object[maxedOut.getArgumentVariables()
                     .size()];
             ProbabilityTable.Iterator di = new ProbabilityTable.Iterator() {
