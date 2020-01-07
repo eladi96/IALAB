@@ -7,7 +7,6 @@ import aima.core.probability.bayes.impl.FullCPTNode;
 import aima.core.probability.domain.FiniteDomain;
 import aima.core.probability.proposition.AssignmentProposition;
 import bifParser.BifBNReader;
-import dnl.utils.text.table.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
