@@ -12,6 +12,8 @@ import org.apache.commons.math3.random.RandomGenerator;
 import java.awt.desktop.SystemSleepEvent;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
 
 /*
 Inputs: u, z
@@ -44,6 +46,7 @@ public class Main {
         //TODO-> variare la P0 iniziale dello stato
         //TODO facoltativo -> simulare un processo (più o meno) non lineare e vedere come si comporta il KF
 
+
         System.out.format("%5s", "Stato");
         System.out.format("%15s", "Posizione");
         System.out.format("%15s", "Posizione Kalman");
@@ -54,7 +57,11 @@ public class Main {
         System.out.format("%15s", "KalmanGain");
 
         //System.out.println("Stato \t Posizione \t Posizione kalman \t Velocità \t Velocita kalman \t ErrorePos \t ErroreVel \t KalmanGain");
-        experiment(dt, measurementNoise[2], noiseCov[2]);
+        try {
+            experiment(dt, measurementNoise[2], noiseCov[2]);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         /*for (double m : measurementNoise) {
             for (RealMatrix cov : noiseCov) {
                 experiment(dt, m, cov);
@@ -64,7 +71,10 @@ public class Main {
 
     }
 
-    private static void experiment(double dt, double measurementNoise, RealMatrix noiseCov) {
+    private static void experiment(double dt, double measurementNoise, RealMatrix noiseCov) throws IOException {
+        FileWriter writer = new FileWriter("risultati.csv");
+        writer.write("Stato,Posizione,PosizioneKalman,Velocità,VelocitàKalman,KalmanGain");
+
         // Matrice di transizione di stato.
         // Fondamentalmente, moltiplica lo stato per questo e aggiungi i fattori di controllo e otterrai una previsione dello stato per il passaggio successivo.
         // A = [ 1 dt ]
@@ -123,8 +133,7 @@ public class Main {
         //vettore per il rumore della osservazione
         RealVector mNoise = new ArrayRealVector(1);
 
-        // matrice di covarianza dell'errore del filtro
-        RealMatrix errorCovariance = filter.getErrorCovarianceMatrix();
+
 
         //PER IL KALMAN GAIN
         RealMatrix HPH;
@@ -154,6 +163,9 @@ public class Main {
             filter.correct(z);
 
             //Kalman Gain
+            // matrice di covarianza dell'errore del filtro
+            RealMatrix errorCovariance = filter.getErrorCovarianceMatrix();
+
             //H*P*H'*(H*P*H'+R)^-1
             HPH = H.multiply(errorCovariance).multiply(H.transpose());
             kalmanGain = HPH.multiply(MatrixUtils.inverse(HPH.add(R)));
@@ -161,21 +173,28 @@ public class Main {
             double position = filter.getStateEstimation()[0];
             double velocity = filter.getStateEstimation()[1];
 
-            risultati(i, x, position, velocity, kalmanGain);
+            risultati(writer, i, x, position, velocity, kalmanGain);
 
         }
+        writer.flush();
+        writer.close();
     }
 
-    private static void risultati(int i, RealVector x, double position, double velocity, RealMatrix k_gain) {
-        /*FileWriter writer = null;
-        try {
-            writer = new FileWriter("risultati_KalmanFilter.csv");
-            writer.write("Stato %s Posizione %s Posizione kalman %s Velocità %s Velocita kalman %s ErrorePos %s ErroreVel %s KalmanGain");
-            writer.write();
+    private static void risultati(FileWriter writer, int i, RealVector x, double position, double velocity, RealMatrix k_gain) throws IOException {
+        writer.write("\n");
+        writer.write(String.valueOf(i));
+        writer.write(",");
+        writer.write(String.valueOf(x.getEntry(0)));
+        writer.write(",");
+        writer.write(String.valueOf(position));
+        writer.write(",");
+        writer.write(String.valueOf(x.getEntry(1)));
+        writer.write(",");
+        writer.write(String.valueOf(velocity));
+        writer.write(",");
+        writer.write(String.valueOf(k_gain.getEntry(0, 0)));
 
-        } catch (IOException e) {
-            e.printStackTrace();
-        }*/
+
 
         System.out.format("%d %1.13f %1.13f %1.13f %1.13f %1.13f %1.13f %1.13f", i, x.getEntry(0), position, x.getEntry(1), velocity, Math.abs(x.getEntry(0) - position), Math.abs(x.getEntry(1) - velocity), k_gain.getEntry(0, 0));
 //        System.out.println("Stato " + (i + 1));
