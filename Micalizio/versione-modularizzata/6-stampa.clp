@@ -53,7 +53,7 @@
 
 (defrule STAMPA::stampa-tour
   (declare (salience 10))
-  ?s <- (soluzioni ?soluzioni&:(< ?soluzioni 5))
+  ?s <- (soluzioni ?soluzioni&:(< ?soluzioni 6))
   ?tour <- (tour (listaCitta $?citta)
                  (listaAlberghi $?alberghi)
                  (listaStelle $?stelle)
@@ -68,7 +68,6 @@
   (retract ?tour)
   (retract ?s)
   (assert (soluzioni ?soluzioni))
-
 )
 
 (defrule STAMPA::rimuovi-tour-scarsi

@@ -28,6 +28,17 @@
            (costoNotte ?costoNotte)
            (camereLibere ?n&:(>= ?n (/ (+ ?persone (mod ?persone 2)) 2))))
   (attributo (nome albergoValutato) (valore ?nomeAlbergo) (certezza ?certezzaAlbergo))
+<<<<<<< HEAD
+
+  ;(attributo (nome regioneDaEvitare) (valore ?regioneDaEvitare))
+
+  ;(localita (nome ?citta) (regione ?regione))
+  ;(localita (nome ?citta) (regione ?regione&:(neq ?regione ?regioneDaEvitare)))
+  ;(or (exists (attributo (nome regioneDaEvitare) (valore ?regioneDaEvitare&:(neq ?regione ?regioneDaEvitare))))
+  ;    (not (exists (attributo (nome regioneDaEvitare) (valore ?regioneDaEvitare)))))
+
+=======
+>>>>>>> 6aedab10be5baaca835a1eafb38f168a4d6a7bab
   =>
   (bind ?certezzaTappa (/ (+ ?certezzaCitta ?certezzaAlbergo) 2))
   (bind ?coefficienteTour (/ 1 (/ (+ ?giorni (mod ?giorni 2)) 2)))
@@ -123,8 +134,12 @@
 )
 
 (defrule TOUR::rimuovi-tour-regioneDaEvitare
+<<<<<<< HEAD
+  (declare (salience 4))
+=======
   (declare (salience 3))
   ?t <- (tour (listaCitta $?listaCitta))
+>>>>>>> 6aedab10be5baaca835a1eafb38f168a4d6a7bab
   (attributo (nome regioneDaEvitare) (valore ?regione))
   (localita (nome ?citta) (regione ?regione))
   =>
