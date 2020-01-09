@@ -9,6 +9,7 @@ import org.apache.commons.math3.filter.DefaultProcessModel;
 import org.apache.commons.math3.random.JDKRandomGenerator;
 import org.apache.commons.math3.random.RandomGenerator;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -45,12 +46,28 @@ public class Main {
         nameForFile.add("medio");
         nameForFile.add("alto");
 
+
+        //System.out.println("current dir = " + dir);
         try {
             for (int i = 0; i < measurementNoise.length; i++) {
                 for (int j = 0; j < noiseCov.length; j++) {
-                    String fileName = "risultati_err_" + nameForFile.get(i) + "_" + nameForFile.get(j) + ".csv";
-                    System.out.println(fileName);
-                    FileWriter writer = new FileWriter(fileName);
+
+                    final String dirFolder = System.getProperty("user.dir") + "/Risultati";
+                    File fileFolder = new File(dirFolder);
+                    if (!fileFolder.exists()) {
+                        fileFolder.mkdir();
+                    }
+
+                    String fileName = "err_" + nameForFile.get(i) + "_" + nameForFile.get(j);
+                    final String dirSubFolder = System.getProperty("user.dir") + "/Risultati/" + fileName;
+                    File fileSubFolder = new File(dirSubFolder);
+                    if (!fileSubFolder.exists()) {
+                        fileSubFolder.mkdir();
+                    }
+                    //System.out.println(fileName);
+                    FileWriter writer = new FileWriter(dirSubFolder + "/" + fileName + ".csv");
+                    System.out.println("\n");
+                    System.out.println("*********************************************** Risultati test " + fileName + " ************************************************");
                     experiment(writer, dt, measurementNoise[i], noiseCov[j]);
                 }
             }
@@ -62,9 +79,9 @@ public class Main {
     }
 
     private static void experiment(FileWriter writer, double dt, double measurementNoise, RealMatrix noiseCov) throws IOException {
+        System.out.format("%5s%15s%20s%15s%20s%20s%15s%15s", "Stato", "Posizione", "PosizioneKalman", "Velocita", "VelocitaKalman", "ErrorePosizione", "ErroreVeocita", "KalmanGain");
 
-        writer.write("Stato,Posizione,PosizioneKalman,Velocità,VelocitàKalman,KalmanGain");
-
+        writer.write("Stato,Posizione,PosizioneKalman,Velocita,VelocitaKalman,ErrorePosizione, ErroreVeocita, KalmanGain");
         // Matrice di transizione di stato.
         // Fondamentalmente, moltiplica lo stato per questo e aggiungi i fattori di controllo e otterrai una previsione dello stato per il passaggio successivo.
         // A = [ 1 dt ]
@@ -129,6 +146,8 @@ public class Main {
         //PER IL KALMAN GAIN
         RealMatrix HPH;
         RealMatrix kalmanGain;
+        // matrice di covarianza dell'errore del filtro
+        RealMatrix errorCovariance = filter.getErrorCovarianceMatrix();
 
         // fase di predizione
         // iterate 60 steps
@@ -143,6 +162,7 @@ public class Main {
             x = A.operate(x).add(B.operate(u)).add(pNoise);
 
             // calcolo il rumore gaussiano per le misurazioni
+            // TODO -> ma l'errore gaussiano non dovrebbe essere lo stesso per tutti gli esperimenti?
             mNoise.setEntry(0, measurementNoise * rand.nextGaussian());
 
             // Vettore di misurazione.
@@ -154,9 +174,6 @@ public class Main {
             filter.correct(z);
 
             //Kalman Gain
-            // matrice di covarianza dell'errore del filtro
-            RealMatrix errorCovariance = filter.getErrorCovarianceMatrix();
-
             //H*P*H'*(H*P*H'+R)^-1
             HPH = H.multiply(errorCovariance).multiply(H.transpose());
             kalmanGain = HPH.multiply(MatrixUtils.inverse(HPH.add(R)));
@@ -172,6 +189,9 @@ public class Main {
     }
 
     private static void risultati(FileWriter writer, int i, RealVector x, double position, double velocity, RealMatrix k_gain) throws IOException {
+        System.out.println();
+        System.out.format("%5d%15f%20f%15f%20f%20f%15f%15f", i, x.getEntry(0), position, x.getEntry(1), velocity, Math.abs(x.getEntry(0) - position), Math.abs(x.getEntry(1) - velocity), k_gain.getEntry(0, 0));
+
         writer.write("\n");
         writer.write(String.valueOf(i));
         writer.write(",");
@@ -182,6 +202,10 @@ public class Main {
         writer.write(String.valueOf(x.getEntry(1)));
         writer.write(",");
         writer.write(String.valueOf(velocity));
+        writer.write(",");
+        writer.write(String.valueOf(Math.abs(x.getEntry(0) - position)));
+        writer.write(",");
+        writer.write(String.valueOf(Math.abs(x.getEntry(1) - velocity)));
         writer.write(",");
         writer.write(String.valueOf(k_gain.getEntry(0, 0)));
 
