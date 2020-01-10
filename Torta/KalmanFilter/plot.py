@@ -6,15 +6,6 @@ from numpy import double
 
 pathRisultati = (os.path.join(os.getcwd(), "Risultati"))
 
-state = []
-pos = []
-posK = []
-vel = []
-velK = []
-kGain = []
-errPos = []
-errVel = []
-
 nameFile = []
 
 
@@ -84,7 +75,7 @@ def plotErrori():
     plt.plot(kGain)
     plt.legend(['posizione', 'velocita', 'kalmanGain'])
     plt.xlabel('Stato')
-    plt.title('Kalman Gain')
+    plt.title('Confronto errori e gain')
     namePNG = nameFile + 'Errori e Kalman Gain.png'
     plt.savefig(os.path.join(path_sub, namePNG))
     plt.clf()
@@ -98,6 +89,16 @@ if __name__ == "__main__":
             for filename in glob.glob(os.path.join(path_sub, '*.csv')):
                 nameFile = os.path.basename(filename).replace('.csv', '_')
                 # print(pathFile)
+
+                state = []
+                pos = []
+                posK = []
+                vel = []
+                velK = []
+                kGain = []
+                errPos = []
+                errVel = []
+
                 with open(filename, "r") as f:
 
                     file = csv.reader(f, delimiter=',')
@@ -109,9 +110,9 @@ if __name__ == "__main__":
                         posK.append(double(row[2]))
                         vel.append(double(row[3]))
                         velK.append(double(row[4]))
-                        kGain.append(double(row[5]))
-                        errPos.append(double(row[6]))
-                        errVel.append(double(row[7]))
+                        errPos.append(double(row[5]))
+                        errVel.append(double(row[6]))
+                        kGain.append(double(row[7]))
 
                     plotPosizione()
                     plotVelocita()
