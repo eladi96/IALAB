@@ -13,9 +13,9 @@
   (multislot then))
 
 (defrule REGOLE::leggi-conseguente
-  ?d <- (regola (if ?attributoDoma is ?valoreRisposta)
+  ?d <- (regola (if ?attributoDomanda is ?valoreRisposta)
                 (then ?attributoSoluzione is ?valore with certezza ?certezza $?rest))
-  (attributo (nome ?attributoDoma) (valore ?valoreRisposta))
+  (attributo (nome ?attributoDomanda) (valore ?valoreRisposta))
   =>
   (modify ?d (then ?rest))
   (assert (attributo (nome ?attributoSoluzione) (valore ?valore) (certezza ?certezza)))

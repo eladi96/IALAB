@@ -23,19 +23,7 @@
   (slot costoTour (default 0))
   (slot certezza (type FLOAT)))
 
-(deftemplate TOUR::distanza
-  (slot partenza)
-  (slot arrivo)
-  (slot valore)
-)
 
-(defrule TOUR::distanza-citta
-  (localita (nome ?nome1) (cordN ?n1) (cordE ?e1))
-  (localita (nome ?nome2) (cordN ?n2) (cordE ?e2))
-  (test (neq ?nome1 ?nome2))
-  =>
-  (assert (distanza (partenza ?nome1) (arrivo ?nome2) (valore (calcola-distanza ?n1 ?n2 ?e1 ?e2))))
-)
 
 (defrule TOUR::citta-di-partenza
   (attributo (nome cittaValutata) (valore ?citta) (certezza ?certezzaCitta))
@@ -55,6 +43,20 @@
                 (listaStelle ?stelle)
                 (listaCosti ?costoNotte)
                 (certezza (* ?coefficienteTour ?certezzaTappa))))
+)
+
+(deftemplate TOUR::distanza
+ (slot partenza)
+ (slot arrivo)
+ (slot valore)
+)
+
+(defrule TOUR::distanza-citta
+ (localita (nome ?nome1) (cordN ?n1) (cordE ?e1))
+ (localita (nome ?nome2) (cordN ?n2) (cordE ?e2))
+ (test (neq ?nome1 ?nome2))
+ =>
+ (assert (distanza (partenza ?nome1) (arrivo ?nome2) (valore (calcola-distanza ?n1 ?n2 ?e1 ?e2))))
 )
 
 (defrule TOUR::citta-successiva
@@ -102,11 +104,6 @@
   (retract ?t2)
 )
 
-(defrule TOUR::rimuovi-tour-scarsi
-  (declare (salience 3))
-  ?tour <- (tour (certezza ?certezza&:(< ?certezza 80)))
-  =>
-  (retract ?tour))
 
 (defrule TOUR::spartisci-notti
   (declare (salience 2))

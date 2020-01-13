@@ -20,7 +20,7 @@
 
 (defrule STAMPA::stampa-tour
   (declare (salience 10))
-  ?s <- (soluzioni ?soluzioni&:(< ?soluzioni 6))
+  ?s <- (soluzioni ?soluzioni&:(< ?soluzioni 5))
   ?tour <- (tour (listaCitta $?citta)
                  (listaAlberghi $?alberghi)
                  (listaStelle $?stelle)
@@ -36,3 +36,9 @@
   (retract ?s)
   (assert (soluzioni ?soluzioni))
 )
+
+(defrule STAMPA::rimuovi-tour-scarsi
+  (declare (salience 20))
+  ?tour <- (tour (certezza ?certezza&:(< ?certezza 80)))
+  =>
+  (retract ?tour))									
