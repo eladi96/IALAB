@@ -12,9 +12,9 @@
   (slot giaChiesta (default FALSE))
   (multislot precursore (default ?DERIVE)))
 
-; Regola che fa avviare la richiesta delle domande. Esse saranno chieste solo se
-; il valore giaChiesta valga FALSE, e diventerà TRUE una volta che la domanda sicilia
-; stata chiesta.
+; Regola che fa avviare la richiesta delle domande nel caso in cui esse non siano state già chieste
+; Questa regola è specifica per le domande con precursore, ovvero domande che devono essere chieste
+; in dipendenza dalla risposta di altre
 (defrule DOMANDE::domanda-con-precursore
    ?f <- (templateDomanda (giaChiesta FALSE)
                    (domanda ?domanda)
@@ -27,6 +27,7 @@
    (assert (attributo (nome ?attributo)
                       (valore (chiedi-domanda ?domanda ?risposteValide)))))
 
+; Regola che fa avviare la richiesta di domande senza precursore
 (defrule DOMANDE::domanda-senza-precursore
    ?f <- (templateDomanda (giaChiesta FALSE)
                    (domanda ?domanda)
@@ -48,7 +49,6 @@
   (templateDomanda (attributo numStelle)
                    (domanda "Hai preferenze sul numero di stelle degli alberghi?")
                    (risposteValide 1 2 3 4 no))
-  ; Se non chiediamo i giorni all'inizio, proponiamo una soluzione che abbia un numero numLuoghi pari a numGiorni / 2
   (templateDomanda (attributo budget)
                    (domanda "A quanto ammonta il tuo budget?")
                    (risposteValide interoPositivo))
@@ -58,9 +58,9 @@
   (templateDomanda (attributo numGiorni)
                    (domanda "Quanti giorni deve durare il viaggio? Minimo due.")
                    (risposteValide interoPositivo))
-  (templateDomanda (attributo tradizione_avventura)
-                   (domanda "Preferisci conoscere le TRADIZIONI del posto o vivere esperienze piu' AVVENTUROSE?")
-                   (risposteValide tradizioni avventurose indifferente)
+  (templateDomanda (attributo tradizione_natura)
+                   (domanda "Preferisci conoscere le TRADIZIONI del posto o passeggiare nella NATURA?")
+                   (risposteValide tradizioni natura indifferente)
                    (precursore scarpe_costume is scarpe))
   (templateDomanda (attributo spiaggia_spa)
                    (domanda "Preferisci andare in SPIAGGIA o in una SPA?")

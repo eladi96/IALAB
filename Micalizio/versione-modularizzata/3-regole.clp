@@ -1,24 +1,21 @@
 ;******************************
 ; REGOLE
+;
+; In questo modulo sono contenuti fatti e regole che definiscono i punteggi di
+; certezza da attribuire alle località in base al tipo di turismo preferito.
 ;******************************
+
 (defmodule REGOLE (import MAIN ?ALL)
-                  (import DOMANDE ?ALL)
-                  (import DOMANDEPRINCIPALI ?ALL)
                   (export ?ALL))
 
 (deftemplate REGOLE::regola
   (multislot if)
   (multislot then))
 
-(defrule REGOLE::cancella-and-in-conseguente
-  ?f <- (regola (then and $?rest))
-  =>
-  (modify ?f (then ?rest)))
-
 (defrule REGOLE::leggi-conseguente
-  ?d <- (regola (if ?attributoDomanda is ?valoreRisposta)
+  ?d <- (regola (if ?attributoDoma is ?valoreRisposta)
                 (then ?attributoSoluzione is ?valore with certezza ?certezza $?rest))
-  (attributo (nome ?attributoDomanda) (valore ?valoreRisposta))
+  (attributo (nome ?attributoDoma) (valore ?valoreRisposta))
   =>
   (modify ?d (then ?rest))
   (assert (attributo (nome ?attributoSoluzione) (valore ?valore) (certezza ?certezza)))
@@ -37,204 +34,204 @@
 
 (deffacts REGOLE::regole-tour
   (regola (if scarpe_costume is scarpe)
-          (then montano is 5 with certezza 70 and
-                montano is 4 with certezza 50 and
-                montano is 3 with certezza 30 and
-                montano is 2 with certezza 10 and
-                montano is 1 with certezza 0 and
-                montano is 0 with certezza -70 and
+          (then montano is 5 with certezza 70
+                montano is 4 with certezza 50
+                montano is 3 with certezza 30
+                montano is 2 with certezza 10
+                montano is 1 with certezza 0
+                montano is 0 with certezza -70
 
-                naturalistico is 5 with certezza 70 and
-                naturalistico is 4 with certezza 50 and
-                naturalistico is 3 with certezza 30 and
-                naturalistico is 2 with certezza 10 and
-                naturalistico is 1 with certezza 0 and
-                naturalistico is 0 with certezza -70 and
+                naturalistico is 5 with certezza 70
+                naturalistico is 4 with certezza 50
+                naturalistico is 3 with certezza 30
+                naturalistico is 2 with certezza 10
+                naturalistico is 1 with certezza 0
+                naturalistico is 0 with certezza -70
 
-                sportivo is 5 with certezza 70 and
-                sportivo is 4 with certezza 50 and
-                sportivo is 3 with certezza 30 and
-                sportivo is 2 with certezza 10 and
-                sportivo is 1 with certezza 0 and
-                sportivo is 0 with certezza -70 and
+                sportivo is 5 with certezza 70
+                sportivo is 4 with certezza 50
+                sportivo is 3 with certezza 30
+                sportivo is 2 with certezza 10
+                sportivo is 1 with certezza 0
+                sportivo is 0 with certezza -70
 
-                culturale is 5 with certezza 70 and
-                culturale is 4 with certezza 50 and
-                culturale is 3 with certezza 30 and
-                culturale is 2 with certezza 10 and
-                culturale is 1 with certezza 0 and
-                culturale is 0 with certezza -70 and
+                culturale is 5 with certezza 70
+                culturale is 4 with certezza 50
+                culturale is 3 with certezza 30
+                culturale is 2 with certezza 10
+                culturale is 1 with certezza 0
+                culturale is 0 with certezza -70
 
                 ;negativi
-                balneare is 5 with certezza -70 and
-                balneare is 4 with certezza -50 and
-                balneare is 3 with certezza -30 and
-                balneare is 2 with certezza -10 and
-                balneare is 1 with certezza 0 and
-                balneare is 0 with certezza 50 and
+                balneare is 5 with certezza -70
+                balneare is 4 with certezza -50
+                balneare is 3 with certezza -30
+                balneare is 2 with certezza -10
+                balneare is 1 with certezza 0
+                balneare is 0 with certezza 50
 
-                lacustre is 5 with certezza -70 and
-                lacustre is 4 with certezza -50 and
-                lacustre is 3 with certezza -30 and
-                lacustre is 2 with certezza -10 and
-                lacustre is 1 with certezza 0 and
-                lacustre is 0 with certezza 50 and
+                lacustre is 5 with certezza -70
+                lacustre is 4 with certezza -50
+                lacustre is 3 with certezza -30
+                lacustre is 2 with certezza -10
+                lacustre is 1 with certezza 0
+                lacustre is 0 with certezza 50
 
-                termale is 5 with certezza -70 and
-                termale is 4 with certezza -50 and
-                termale is 3 with certezza -30 and
-                termale is 2 with certezza -10 and
-                termale is 1 with certezza 0 and
-                termale is 0 with certezza 50 and))
+                termale is 5 with certezza -70
+                termale is 4 with certezza -50
+                termale is 3 with certezza -30
+                termale is 2 with certezza -10
+                termale is 1 with certezza 0
+                termale is 0 with certezza 50 ))
 
   (regola (if scarpe_costume is costume)
-          (then balneare is 5 with certezza 70 and
-                balneare is 4 with certezza 50 and
-                balneare is 3 with certezza 30 and
-                balneare is 2 with certezza 10 and
-                balneare is 1 with certezza 0 and
-                balneare is 0 with certezza -70 and
+          (then balneare is 5 with certezza 70
+                balneare is 4 with certezza 50
+                balneare is 3 with certezza 30
+                balneare is 2 with certezza 10
+                balneare is 1 with certezza 0
+                balneare is 0 with certezza -70
 
-                termale is 5 with certezza 70 and
-                termale is 4 with certezza 50 and
-                termale is 3 with certezza 30 and
-                termale is 2 with certezza 10 and
-                termale is 1 with certezza 0 and
-                termale is 0 with certezza -70 and
+                termale is 5 with certezza 70
+                termale is 4 with certezza 50
+                termale is 3 with certezza 30
+                termale is 2 with certezza 10
+                termale is 1 with certezza 0
+                termale is 0 with certezza -70
 
-                lacustre is 5 with certezza 70 and
-                lacustre is 4 with certezza 50 and
-                lacustre is 3 with certezza 30 and
-                lacustre is 2 with certezza 10 and
-                lacustre is 1 with certezza 0 and
-                lacustre is 0 with certezza -70 and
+                lacustre is 5 with certezza 70
+                lacustre is 4 with certezza 50
+                lacustre is 3 with certezza 30
+                lacustre is 2 with certezza 10
+                lacustre is 1 with certezza 0
+                lacustre is 0 with certezza -70
 
-                sportivo is 5 with certezza 50 and
-                sportivo is 4 with certezza 40 and
-                sportivo is 3 with certezza 30 and
-                sportivo is 2 with certezza 20 and
-                sportivo is 1 with certezza 10 and
-                sportivo is 0 with certezza 0 and
+                sportivo is 5 with certezza 50
+                sportivo is 4 with certezza 40
+                sportivo is 3 with certezza 30
+                sportivo is 2 with certezza 20
+                sportivo is 1 with certezza 10
+                sportivo is 0 with certezza 0
 
                 ;negativi
 
-                montano is 5 with certezza -70 and
-                montano is 4 with certezza -50 and
-                montano is 3 with certezza -30 and
-                montano is 2 with certezza -10 and
-                montano is 1 with certezza 0 and
-                montano is 0 with certezza 70 and))
+                montano is 5 with certezza -70
+                montano is 4 with certezza -50
+                montano is 3 with certezza -30
+                montano is 2 with certezza -10
+                montano is 1 with certezza 0
+                montano is 0 with certezza 70 ))
 
   (regola (if spiaggia_spa is spiaggia)
-          (then balneare is 5 with certezza 80 and
-                balneare is 4 with certezza 60 and
-                balneare is 3 with certezza 40 and
-                balneare is 2 with certezza 20 and
-                balneare is 1 with certezza 0 and
-                balneare is 0 with certezza -80 and
+          (then balneare is 5 with certezza 80
+                balneare is 4 with certezza 60
+                balneare is 3 with certezza 40
+                balneare is 2 with certezza 20
+                balneare is 1 with certezza 0
+                balneare is 0 with certezza -80
 
                 ;negativi
-                termale is 5 with certezza -80 and
-                termale is 4 with certezza -60 and
-                termale is 3 with certezza -40 and
-                termale is 2 with certezza -20 and
-                termale is 1 with certezza 0 and
-                termale is 0 with certezza 80 and))
+                termale is 5 with certezza -80
+                termale is 4 with certezza -60
+                termale is 3 with certezza -40
+                termale is 2 with certezza -20
+                termale is 1 with certezza 0
+                termale is 0 with certezza 80 ))
 
   (regola (if spiaggia_spa is spa)
-          (then termale is 5 with certezza 80 and
-                termale is 4 with certezza 60 and
-                termale is 3 with certezza 40 and
-                termale is 2 with certezza 20 and
-                termale is 1 with certezza 0 and
-                termale is 0 with certezza -80 and
+          (then termale is 5 with certezza 80
+                termale is 4 with certezza 60
+                termale is 3 with certezza 40
+                termale is 2 with certezza 20
+                termale is 1 with certezza 0
+                termale is 0 with certezza -80
 
                 ;negativi
-                balneare is 5 with certezza -80 and
-                balneare is 4 with certezza -60 and
-                balneare is 3 with certezza -40 and
-                balneare is 2 with certezza -20 and
-                balneare is 1 with certezza 0 and
-                balneare is 0 with certezza 80 and
+                balneare is 5 with certezza -80
+                balneare is 4 with certezza -60
+                balneare is 3 with certezza -40
+                balneare is 2 with certezza -20
+                balneare is 1 with certezza 0
+                balneare is 0 with certezza 80
 
-                sportivo is 5 with certezza -70 and
-                sportivo is 4 with certezza -50 and
-                sportivo is 3 with certezza -30 and
-                sportivo is 2 with certezza -10 and
-                sportivo is 1 with certezza 0 and
-                sportivo is 0 with certezza 70 and))
+                sportivo is 5 with certezza -70
+                sportivo is 4 with certezza -50
+                sportivo is 3 with certezza -30
+                sportivo is 2 with certezza -10
+                sportivo is 1 with certezza 0
+                sportivo is 0 with certezza 70 ))
 
-(regola (if tradizione_avventura is tradizioni)
-        (then enogastronomico is 5 with certezza 80 and
-              enogastronomico is 4 with certezza 60 and
-              enogastronomico is 3 with certezza 40 and
-              enogastronomico is 2 with certezza 20 and
-              enogastronomico is 1 with certezza 0 and
-              enogastronomico is 0 with certezza -80 and
+(regola (if tradizione_natura is tradizioni)
+        (then enogastronomico is 5 with certezza 80
+              enogastronomico is 4 with certezza 60
+              enogastronomico is 3 with certezza 40
+              enogastronomico is 2 with certezza 20
+              enogastronomico is 1 with certezza 0
+              enogastronomico is 0 with certezza -80
 
-              culturale is 5 with certezza 80 and
-              culturale is 4 with certezza 60 and
-              culturale is 3 with certezza 40 and
-              culturale is 2 with certezza 20 and
-              culturale is 1 with certezza 0 and
-              culturale is 0 with certezza -80 and
+              culturale is 5 with certezza 80
+              culturale is 4 with certezza 60
+              culturale is 3 with certezza 40
+              culturale is 2 with certezza 20
+              culturale is 1 with certezza 0
+              culturale is 0 with certezza -80
 
-              religioso is 5 with certezza 80 and
-              religioso is 4 with certezza 60 and
-              religioso is 3 with certezza 40 and
-              religioso is 2 with certezza 20 and
-              religioso is 1 with certezza 0 and
-              religioso is 0 with certezza -80 and
+              religioso is 5 with certezza 80
+              religioso is 4 with certezza 60
+              religioso is 3 with certezza 40
+              religioso is 2 with certezza 20
+              religioso is 1 with certezza 0
+              religioso is 0 with certezza -80
 
               ; negativi
-              sportivo is 5 with certezza -60 and
-              sportivo is 4 with certezza -40 and
-              sportivo is 3 with certezza -30 and
-              sportivo is 2 with certezza -20 and
-              sportivo is 1 with certezza 0 and
-              sportivo is 0 with certezza 60 and
+              sportivo is 5 with certezza -60
+              sportivo is 4 with certezza -40
+              sportivo is 3 with certezza -30
+              sportivo is 2 with certezza -20
+              sportivo is 1 with certezza 0
+              sportivo is 0 with certezza 60
 
-              naturalistico is 5 with certezza -60 and
-              naturalistico is 4 with certezza -40 and
-              naturalistico is 3 with certezza -30  and
-              naturalistico is 2 with certezza -20 and
-              naturalistico is 1 with certezza 0 and
+              naturalistico is 5 with certezza -60
+              naturalistico is 4 with certezza -40
+              naturalistico is 3 with certezza -30
+              naturalistico is 2 with certezza -20
+              naturalistico is 1 with certezza 0
               naturalistico is 0 with certezza 60 ))
 
-(regola (if tradizione_avventura is avventurose)
-        (then naturalistico is 5 with certezza 80  and
-              naturalistico is 4 with certezza 60  and
-              naturalistico is 3 with certezza 40  and
-              naturalistico is 2 with certezza 20 and
-              naturalistico is 1 with certezza 0 and
-              naturalistico is 0 with certezza -80 and
+(regola (if tradizione_natura is natura)
+        (then naturalistico is 5 with certezza 80
+              naturalistico is 4 with certezza 60
+              naturalistico is 3 with certezza 40
+              naturalistico is 2 with certezza 20
+              naturalistico is 1 with certezza 0
+              naturalistico is 0 with certezza -80
 
-              sportivo is 5 with certezza 80 and
-              sportivo is 4 with certezza 60 and
-              sportivo is 3 with certezza 40 and
-              sportivo is 2 with certezza 20 and
-              sportivo is 1 with certezza 0 and
-              sportivo is 0 with certezza -80 and
+              sportivo is 5 with certezza 80
+              sportivo is 4 with certezza 60
+              sportivo is 3 with certezza 40
+              sportivo is 2 with certezza 20
+              sportivo is 1 with certezza 0
+              sportivo is 0 with certezza -80
 
               ; negativi
-              religioso is 5 with certezza -60  and
-              religioso is 4 with certezza -40  and
-              religioso is 3 with certezza -30  and
-              religioso is 2 with certezza -20 and
-              religioso is 1 with certezza 0 and
-              religioso is 0 with certezza 60 and
+              religioso is 5 with certezza -60
+              religioso is 4 with certezza -40
+              religioso is 3 with certezza -30
+              religioso is 2 with certezza -20
+              religioso is 1 with certezza 0
+              religioso is 0 with certezza 60
 
-              enogastronomico is 5 with certezza -60 and
-              enogastronomico is 4 with certezza -40 and
-              enogastronomico is 3 with certezza -30 and
-              enogastronomico is 2 with certezza -20 and
-              enogastronomico is 1 with certezza 0 and
-              enogastronomico is 0 with certezza 60 and
+              enogastronomico is 5 with certezza -60
+              enogastronomico is 4 with certezza -40
+              enogastronomico is 3 with certezza -30
+              enogastronomico is 2 with certezza -20
+              enogastronomico is 1 with certezza 0
+              enogastronomico is 0 with certezza 60
 
-              culturale is 5 with certezza -60 and
-              culturale is 4 with certezza -40 and
-              culturale is 3 with certezza -30 and
-              culturale is 2 with certezza -20 and
-              culturale is 1 with certezza 0 and
+              culturale is 5 with certezza -60
+              culturale is 4 with certezza -40
+              culturale is 3 with certezza -30
+              culturale is 2 with certezza -20
+              culturale is 1 with certezza 0
               culturale is 0 with certezza 60 ))
 )

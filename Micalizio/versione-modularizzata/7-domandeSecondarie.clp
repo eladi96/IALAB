@@ -17,10 +17,10 @@
   ?r <- (attributo (nome continuaRicerca) (valore si))
 
   =>
-  (assert (templateDomanda (attributo tradizione_avventura)
-                   (domanda "Preferisci conoscere le TRADIZIONI del posto o vivere esperienze piu' AVVENTUROSE?")
-                   (risposteValide tradizioni avventurose indifferente)
-                   (precursore tradizione_avventura is indifferente)))
+  (assert (templateDomanda (attributo tradizione_natura)
+                   (domanda "Preferisci conoscere le TRADIZIONI del posto o passeggiare nella NATURA?")
+                   (risposteValide tradizioni natura indifferente)
+                   (precursore tradizione_natura is indifferente)))
   (assert (templateDomanda (attributo spiaggia_spa)
                    (domanda "Preferisci andare in SPIAGGIA o in una SPA?")
                    (risposteValide spiaggia spa indifferente)

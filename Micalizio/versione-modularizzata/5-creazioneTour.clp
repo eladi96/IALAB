@@ -1,12 +1,17 @@
 ;************************
 ; COSTRUZIONE TOUR
+;
+; In questo modulo sono contenute le regole di costruzione del tour. La creazione
+; del tour si basa principalmente sulla distanza tra le città. Una volta creati
+; tutti i tour possibili, essi vengono valutati in base alle certezze delle città
+; che li compongono e degli alberghi scelti per alloggiare. Inoltre sono presenti
+; regole per rimuovere tour simili tra loro (per esempio con le stesse città ma in
+; diverso ordine), per il calcolo del costo complessivo del tour e per
+; la divisione delle notti da trascorrere nelle varie località.
 ;***********************
 (defmodule TOUR (import MAIN ?ALL)
-                (import DOMANDE ?ALL)
-                (import DOMANDEPRINCIPALI ?ALL)
                 (import DOMINIO ?ALL)
-                (import REGOLE ?ALL)
-                (import PUNTEGGIO ?ALL) (export ?ALL))
+                (export ?ALL))
 
 (deftemplate TOUR::tour
   (multislot listaCitta)
@@ -17,6 +22,20 @@
   (slot nottiCompilate (default FALSE))
   (slot costoTour (default 0))
   (slot certezza (type FLOAT)))
+
+(deftemplate TOUR::distanza
+  (slot partenza)
+  (slot arrivo)
+  (slot valore)
+)
+
+(defrule TOUR::distanza-citta
+  (localita (nome ?nome1) (cordN ?n1) (cordE ?e1))
+  (localita (nome ?nome2) (cordN ?n2) (cordE ?e2))
+  (test (neq ?nome1 ?nome2))
+  =>
+  (assert (distanza (partenza ?nome1) (arrivo ?nome2) (valore (calcola-distanza ?n1 ?n2 ?e1 ?e2))))
+)
 
 (defrule TOUR::citta-di-partenza
   (attributo (nome cittaValutata) (valore ?citta) (certezza ?certezzaCitta))
@@ -50,7 +69,6 @@
 )
 
 (defrule TOUR::citta-successiva
-  ; risolvere problema: casulità degli hotel (nella traccia "favoreggiamento")
   ?t <- (tour (listaCitta $?cittaPrec ?cittaCorr)
               (listaAlberghi $?alberghiPrec ?albergoCorr)
               (listaStelle $?stellePrec ?stelleCorr)
@@ -83,19 +101,6 @@
 
 )))
 
-;(defrule TOUR::rimuovi-permutazioni-tour
-;  (declare (salience 4))
-;  ?t1 <- (tour (listaCitta $?listaCitta1) (listaAlberghi $?listaAlberghi1))
-;  ?t2 <- (tour (listaCitta $?listaCitta2) (listaAlberghi $?listaAlberghi2))
-;  ;(test (neq ?t1 ?t2))
-;  (test (eq (length$ ?listaCitta1) (length$ ?listaCitta2)))
-;  (test (neq ?listaCitta1 ?listaCitta2))
-;  (test (neq ?listaAlberghi1 ?listaAlberghi2))
-;  (test (subsetp ?listaCitta1 ?listaCitta2))
-;  =>
-;  (retract ?t2)
-;)
-
 (defrule TOUR::rimuovi-tour-ridondanti
   (declare (salience 3))
   ?t1 <- (tour (listaCitta $?listaCitta1) (certezza ?certezza1))
@@ -107,6 +112,12 @@
   =>
   (retract ?t2)
 )
+
+(defrule TOUR::rimuovi-tour-scarsi
+  (declare (salience 3))
+  ?tour <- (tour (certezza ?certezza&:(< ?certezza 80)))
+  =>
+  (retract ?tour))
 
 (defrule TOUR::spartisci-notti
   (declare (salience 2))

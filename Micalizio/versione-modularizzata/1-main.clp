@@ -24,11 +24,6 @@
          TOUR
          STAMPA))
 
-; funzione per chiedere le domande (MAIN è il modulo)
-; La domanda viene chiesta ripetutamente finchè non riceve una risposta corretta
-; che sarà un numero positivo nel caso in cui il multislot "risposteValide" contenga
-; l'elemento interoPositivo, o una risposta valida tra quelle elencate.
-; ?risposta è il valore di ritorno
 (deffunction MAIN::chiedi-domanda (?domanda ?risposteValide)
    (printout t ?domanda)
    (bind ?risposta (read))

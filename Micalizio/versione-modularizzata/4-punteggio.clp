@@ -2,11 +2,12 @@
 ; MODULO PUNTEGGIO
 ;***********************
 (defmodule PUNTEGGIO (import MAIN ?ALL)
-                   (import DOMANDE ?ALL)
-                   (import DOMANDEPRINCIPALI ?ALL)
-                   (import DOMINIO ?ALL)
-                   (import REGOLE ?ALL)
-                   (export ?ALL))
+                     (import DOMINIO ?ALL)
+                     (export ?ALL))
+
+;*******************************************************************************
+; Calcolo della certezza delle località in base ai punteggi attribuiti tramite
+; le risposte alle domande iniziali
 
 (defrule PUNTEGGIO::punteggio-balneare
   (attributo (nome balneare) (valore ?p) (certezza ?c))
@@ -79,20 +80,12 @@
   =>
   (assert (attributo (nome cittaValutata) (valore ?nome) (certezza ?c)))
 )
+;*******************************************************************************
 
-(deftemplate PUNTEGGIO::distanza
-  (slot partenza)
-  (slot arrivo)
-  (slot valore)
-)
-
-(defrule PUNTEGGIO::distanza-citta
-  (localita (nome ?nome1) (cordN ?n1) (cordE ?e1))
-  (localita (nome ?nome2) (cordN ?n2) (cordE ?e2))
-  (test (neq ?nome1 ?nome2))
-  =>
-  (assert (distanza (partenza ?nome1) (arrivo ?nome2) (valore (calcola-distanza ?n1 ?n2 ?e1 ?e2))))
-)
+;*******************************************************************************
+; Calcolo della certezza degli alberghi in base alle informazioni su budget,
+; giorni, numero di persone e quindi di camere necessarie e preferenza sul
+; numero di stelle
 
 (defrule PUNTEGGIO::punteggio-albergo
   (albergo (nome ?nome) (stelle ?stelleAlbergo) (costoNotte ?costoNotte))
@@ -108,3 +101,4 @@
   (bind ?certezza (punteggio-stelle ?stelleUtente ?stelleAlbergo ?certezza))
   (assert (attributo (nome albergoValutato) (valore ?nome) (certezza (controlla-certezza ?certezza))))
 )
+;*******************************************************************************
