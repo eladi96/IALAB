@@ -39,6 +39,6 @@
 
 (defrule STAMPA::rimuovi-tour-scarsi
   (declare (salience 20))
-  ?tour <- (tour (certezza ?certezza&:(< ?certezza 80)))
+  ?tour <- (tour (certezza ?certezza&:(< ?certezza 70)))
   =>
   (retract ?tour))
