@@ -41,4 +41,4 @@
   (declare (salience 20))
   ?tour <- (tour (certezza ?certezza&:(< ?certezza 80)))
   =>
-  (retract ?tour))									
+  (retract ?tour))

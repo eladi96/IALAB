@@ -83,9 +83,8 @@
 ;*******************************************************************************
 
 ;*******************************************************************************
-; Calcolo della certezza degli alberghi in base alle informazioni su budget,
-; giorni, numero di persone e quindi di camere necessarie e preferenza sul
-; numero di stelle
+; Calcolo della certezza degli alberghi in base alle informazioni su budget
+; e preferenza sul numero di stelle
 
 (defrule PUNTEGGIO::punteggio-albergo
   (albergo (nome ?nome) (stelle ?stelleAlbergo) (costoNotte ?costoNotte))
