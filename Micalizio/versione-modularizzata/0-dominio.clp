@@ -19,6 +19,7 @@
   (slot sportivo (type INTEGER) (range 0 5))
   (slot enogastronomico (type INTEGER) (range 0 5)))
 
+; template albergo
 (deftemplate DOMINIO::albergo
   (slot nome (type STRING))
   (slot stelle (type INTEGER) (range 1 4))
@@ -26,11 +27,8 @@
   (slot costoNotte (type FLOAT))
   (slot localita))
 
-(deftemplate DOMINIO::visitaTuristica
-  (slot numPersone (type INTEGER) (range 0 ?VARIABLE))
-  (slot localita)
-  (slot numGiorni (type INTEGER) (range 1 ?VARIABLE)))
-
+; fatti per le località
+; una località è definita da nome, regione, coordinate geografiche, punteggi relativi alla tipologia di turismo
 (deffacts DOMINIO::lista-localita
   (localita (nome "Aosta")              (regione valledaosta)    (cordN 45.73) (cordE 7.31)  (balneare 0) (montano 5) (lacustre 0) (naturalistico 4) (termale 0) (culturale 1) (religioso 0) (sportivo 5) (enogastronomico 1))
   (localita (nome "Courmayer")          (regione valledaosta)    (cordN 45.79) (cordE 6.97)  (balneare 0) (montano 5) (lacustre 0) (naturalistico 5) (termale 0) (culturale 1) (religioso 0) (sportivo 5) (enogastronomico 1))
@@ -82,6 +80,8 @@
   (localita (nome "Oristano")           (regione sardegna)       (cordN 39.90) (cordE 8.59)  (balneare 5) (montano 0) (lacustre 3) (naturalistico 3) (termale 0) (culturale 2) (religioso 0) (sportivo 2) (enogastronomico 3))
   (localita (nome "Alghero")            (regione sardegna)       (cordN 40.55) (cordE 8.32)  (balneare 5) (montano 0) (lacustre 1) (naturalistico 2) (termale 0) (culturale 2) (religioso 0) (sportivo 2) (enogastronomico 3)))
 
+; fatti per gli alberghi
+; un albergo è definito da nome, località in cui si trova, numero di stelle, camere libere e costo della notte
 (deffacts DOMINIO::lista-alberghi
   ; (albergo (nome "")          (localita "")           (stelle ) (camereLibere ) (costoNotte ))
   (albergo (nome "Norden")          (localita "Aosta")              (stelle 3) (camereLibere 1) (costoNotte 110.0))

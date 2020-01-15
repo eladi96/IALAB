@@ -1,5 +1,7 @@
 ;;*************************
 ;; MODULO MAIN
+;; Questo modulo è usato semplicemente per avviare il sistema,
+;; e come contenitore di funzioni utili ai fini dell’esecuzione.
 ;;*************************
 (defmodule MAIN (export ?ALL))
 
@@ -24,6 +26,8 @@
          TOUR
          STAMPA))
 
+; in base alla domanda posta, questa funzione si occupa controllare la risposta
+; data dall'utente e se valida registrarla, in caso contrario continuerà a stampare la domanda
 (deffunction MAIN::chiedi-domanda (?domanda ?risposteValide)
    (printout t ?domanda)
    (bind ?risposta (read))
@@ -48,6 +52,7 @@
 
    ?risposta)
 
+; funzione per combinare due certezze
 (deffunction MAIN::combina-certezze(?c1 ?c2)
   (bind ?nuovaCertezza 0)
   (bind ?c1 (/ ?c1 100))
@@ -61,12 +66,15 @@
   ?nuovaCertezza
 )
 
+; controlla che il range di una certezza si compreso tra -100 e 100
+; definisce quindi una soglia per i valori esterni all'intervallo
 (deffunction MAIN::controlla-certezza(?c)
   (if (> ?c 100) then (bind ?c 100))
   (if (< ?c -100) then (bind ?c -100))
   ?c
 )
 
+; in base alle coordinate geografiche, calcola la distanza in linea d'aria sulla superficie terreste
 (deffunction MAIN::calcola-distanza(?n1 ?n2 ?e1 ?e2)
   (bind ?s1 (sin (deg-rad (- 90 ?n1))))
   (bind ?s2 (sin (deg-rad (- 90 ?n2))))
@@ -77,6 +85,7 @@
   ?dist
 )
 
+; stampa dei risultati
 (deffunction MAIN::stampa-tour(?numeroTour ?listaCitta ?listaAlberghi ?listaStelle ?listaCosti ?listaNotti ?certezza ?costoComplessivo)
   (bind ?i 1)
   (format t "%nTOUR %-2d - PUNTEGGIO: %-3.2f - COSTO TOT.: %-7.2f%n%n" ?numeroTour ?certezza ?costoComplessivo)
@@ -92,6 +101,9 @@
   )
 )
 
+; se l'utente inserisce la preferenza sul numero di stelle,
+; la certezza viene combinata prendendo alla certezza precedente,
+; le stelle inserite dall'utente e le stelle dell'albergo considerato
 (deffunction MAIN::punteggio-stelle(?stelleUtente ?stelleAlbergo ?certezza)
   (if (neq ?stelleUtente no) then
     (bind ?certezza (* ?certezza (- 1 (/ (abs (- ?stelleUtente ?stelleAlbergo)) 3))))
@@ -99,6 +111,9 @@
   ?certezza
 )
 
+; divide equamente il numero totale delle notti per il numero di località visitate,
+; e distribuisce l’eventuale resto di questa divisione aggiungendo notti alle località
+; i cui alberghi hanno un prezzo minore
 (deffunction MAIN::spartisci-notti(?numLocalita ?nottiPerLocalita ?nottiAvanzate ?costoNotte)
   (bind ?listaNotti (create$ ))
   (bind ?i 1)

@@ -1,16 +1,19 @@
 ;******************************
 ; DOMANDE SECONDARIE
+; fase di raffinamento della soluzione
 ;******************************
 (defmodule DOMANDESECONDARIE (import MAIN ?ALL)
                              (import DOMANDE ?ALL)
                              (import TOUR ?ALL)
                              (export ?ALL))
 
+; eliminiamo tutti i tour e i punteggi relativi agli alberghi e alle citta presenti in memoria
 (defrule DOMANDESECONDARIE::pulisci-memoria
   (fase 2)
   =>
   (do-for-all-facts ((?t tour)) TRUE (retract ?t))
   (do-for-all-facts ((?a attributo)) (eq ?a:nome albergoValutato) (retract ?a))
+  (do-for-all-facts ((?c attributo)) (eq ?c:nome cittaValutata) (retract ?c))
 )
 
 (defrule DOMANDESECONDARIE::domande-secondarie

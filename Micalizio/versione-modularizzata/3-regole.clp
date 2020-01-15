@@ -8,10 +8,13 @@
 (defmodule REGOLE (import MAIN ?ALL)
                   (export ?ALL))
 
+; templare delle regole
 (deftemplate REGOLE::regola
   (multislot if)
   (multislot then))
 
+; in base alle risposte date dall'utente, questa regola si occupa di asserire
+; tutti i valori delle certezze relativi ad una determinata tipologia di turismo
 (defrule REGOLE::leggi-conseguente
   ?d <- (regola (if ?attributoDomanda is ?valoreRisposta)
                 (then ?attributoSoluzione is ?valore with certezza ?certezza $?rest))
@@ -21,6 +24,9 @@
   (assert (attributo (nome ?attributoSoluzione) (valore ?valore) (certezza ?certezza)))
 )
 
+; se due attributi hanno lo stesso nome e gli stessi valori ma certezze diverse
+; la regola si attiva: ritrae il primo attributo e modifica il secondo combinando le due certezze
+; con la funzione combina-certezze
 (defrule REGOLE::combina-certezze
   (declare (salience 100)
            (auto-focus TRUE))
@@ -31,7 +37,7 @@
   (retract ?attr1)
   (modify ?attr2 (certezza (combina-certezze ?c1 ?c2))))
 
-
+; fatti per associare i punteggi alle varie tipologie di turismo
 (deffacts REGOLE::regole-tour
   (regola (if scarpe_costume is scarpe)
           (then montano is 5 with certezza 70

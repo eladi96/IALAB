@@ -6,8 +6,8 @@
                      (export ?ALL))
 
 ;*******************************************************************************
-; Calcolo della certezza delle località in base ai punteggi attribuiti tramite
-; le risposte alle domande iniziali
+; Calcolo delle certezze da associare alle località in base alle risposte date 
+; dall’utente e ai fatti asseriti durante l’esecuzione del modulo REGOLE
 
 (defrule PUNTEGGIO::punteggio-balneare
   (attributo (nome balneare) (valore ?p) (certezza ?c))

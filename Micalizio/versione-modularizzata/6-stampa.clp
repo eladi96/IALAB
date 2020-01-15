@@ -5,6 +5,9 @@
                   (import TOUR ?ALL)
                   (export ?ALL))
 
+; regola per raffinare la soluzione proposta:
+; vengono riproposta all'utente tutte le domande ignorate nella prima fase e
+; se vuole evitare una regione particolare
 (defrule STAMPA::continua-ricerca
   (declare (salience 1))
   ?s <- (soluzioni ?soluzioni&:(> ?soluzioni 0))
@@ -18,6 +21,7 @@
       (focus DOMANDESECONDARIE))
   )
 
+; regola per stampare le soluzioni proposte all'utente
 (defrule STAMPA::stampa-tour
   (declare (salience 10))
   ?s <- (soluzioni ?soluzioni&:(< ?soluzioni 5))
@@ -37,6 +41,7 @@
   (assert (soluzioni ?soluzioni))
 )
 
+; eliminiamo tour con certezza inferiore a 70
 (defrule STAMPA::rimuovi-tour-scarsi
   (declare (salience 20))
   ?tour <- (tour (certezza ?certezza&:(< ?certezza 70)))

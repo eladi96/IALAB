@@ -13,6 +13,7 @@
                 (import DOMINIO ?ALL)
                 (export ?ALL))
 
+; template del tour
 (deftemplate TOUR::tour
   (multislot listaCitta)
   (multislot listaAlberghi)
@@ -23,8 +24,25 @@
   (slot costoTour (default 0))
   (slot certezza (type FLOAT)))
 
+; template per la distanza tra due città
+(deftemplate TOUR::distanza
+  (slot partenza)
+  (slot arrivo)
+  (slot valore)
+)
 
+; regola per calcolare la distanza tra due città
+(defrule TOUR::distanza-citta
+  (localita (nome ?nome1) (cordN ?n1) (cordE ?e1))
+  (localita (nome ?nome2) (cordN ?n2) (cordE ?e2))
+  (test (neq ?nome1 ?nome2))
+  =>
+  (assert (distanza (partenza ?nome1) (arrivo ?nome2) (valore (calcola-distanza ?n1 ?n2 ?e1 ?e2))))
+)
 
+; regola per costruire tour da una tappa
+; un tour non viene creato se:
+;   - l'albergo non ha un numero sufficiente di camere per ospitare tutte le persone che partecipano al tour
 (defrule TOUR::citta-di-partenza
   (attributo (nome cittaValutata) (valore ?citta) (certezza ?certezzaCitta))
   (attributo (nome numPersone) (valore ?persone))
@@ -45,20 +63,12 @@
                 (certezza (* ?coefficienteTour ?certezzaTappa))))
 )
 
-(deftemplate TOUR::distanza
- (slot partenza)
- (slot arrivo)
- (slot valore)
-)
-
-(defrule TOUR::distanza-citta
- (localita (nome ?nome1) (cordN ?n1) (cordE ?e1))
- (localita (nome ?nome2) (cordN ?n2) (cordE ?e2))
- (test (neq ?nome1 ?nome2))
- =>
- (assert (distanza (partenza ?nome1) (arrivo ?nome2) (valore (calcola-distanza ?n1 ?n2 ?e1 ?e2))))
-)
-
+; regola per costruire tour da due o più tappe
+; un tour non viene creato se:
+;   - l'albergo non ha un numero sufficiente di camere per ospitare tutte le persone che partecipano al tour
+;   - la distanza tra due città è superiore a 100 km
+;   - la città è stata già inserita precentemente nel tour
+;   - il numero di tappe nel tour non deve essere maggiore del numero dei giorni/2
 (defrule TOUR::citta-successiva
   ?t <- (tour (listaCitta $?cittaPrec ?cittaCorr)
               (listaAlberghi $?alberghiPrec ?albergoCorr)
@@ -92,6 +102,10 @@
 
 )))
 
+; rimuove dalla KB il tour con certezza minore che contiene la maggior parte delle città uguali ad un altro tour
+; la regola controlla:
+; che la prima metà +1 della lista delle città del secondo tour sia contenuta nella lista delle città del primo tour
+; che la seconda metà +1 della lista delle città del secondo tour sia contenuta nella lista delle città del primo tour
 (defrule TOUR::rimuovi-tour-ridondanti
   (declare (salience 3))
   ?t1 <- (tour (listaCitta $?listaCitta1) (certezza ?certezza1))
@@ -104,7 +118,7 @@
   (retract ?t2)
 )
 
-
+; assegna il numero di notti da trascorrere nei vari alberghi richiamando l'omonima funzione
 (defrule TOUR::spartisci-notti
   (declare (salience 2))
   ?tour <- (tour (listaCitta $?citta)
@@ -122,6 +136,7 @@
                 (nottiCompilate TRUE))
 )
 
+; per calcolare il costo complessivo del tour somma i costi delle notti dei vari alberghi
 (defrule TOUR::calcola-costo-complessivo
   (declare (salience 1))
   ?tour <- (tour (listaCosti $?costi) (listaNotti $?notti) (nottiCompilate TRUE) (costoTour 0))
@@ -130,6 +145,8 @@
   (modify ?tour (costoTour (calcola-costo-tour ?costi ?persone ?notti)))
 )
 
+; se l'utente ha inserito una preferenza sulla regione da evitare,
+; questa regola rimuove tutti i tour che contengono città della regione specificata
 (defrule TOUR::rimuovi-tour-regioneDaEvitare
   (declare (salience 3))
   ?t <- (tour (listaCitta $?listaCitta))
