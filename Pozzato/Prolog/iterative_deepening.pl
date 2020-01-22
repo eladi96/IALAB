@@ -25,6 +25,10 @@ iterative_deepening(Soluzione, Soglia):-
 % con la soglia precedente, essa viene richiamata dopo aver incrementato la soglia.
 iterative_deepening(Soluzione, Soglia):-
   NuovaSoglia is Soglia + 1,
+  num_righe(NR),
+  num_colonne(NC),
+  SogliaMax is (NR * NC) / 2,
+  NuovaSoglia < SogliaMax,
   iterative_deepening(Soluzione, NuovaSoglia).
 
 % Ricerca in profondità limitata.
