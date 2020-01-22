@@ -14,8 +14,11 @@ gCosto([Azione|AltreAzioni], G_costo_totale):-
     costo(Azione, G_costo),
     G_costo_totale is G_costo_parziale + G_costo.
 
+iterative_deepening(Solu):-
+  id(Solu, 0).
+
 % Passo base della ricerca iterativa
-iterative_deepening(Soluzione, Soglia):-
+id(Soluzione, Soglia):-
   depth_limit_search(Soluzione, Soglia),
   % quando ha trovato la soluzione, stampa il costo del cammino.
   gCosto(Soluzione, CostoCammino),
@@ -23,13 +26,13 @@ iterative_deepening(Soluzione, Soglia):-
 
 % Passo ricorsivo della ricerca iterativa: se non è stata trovata una soluzione
 % con la soglia precedente, essa viene richiamata dopo aver incrementato la soglia.
-iterative_deepening(Soluzione, Soglia):-
+id(Soluzione, Soglia):-
   NuovaSoglia is Soglia + 1,
   num_righe(NR),
   num_colonne(NC),
   SogliaMax is (NR * NC) / 2,
   NuovaSoglia < SogliaMax,
-  iterative_deepening(Soluzione, NuovaSoglia).
+  id(Soluzione, NuovaSoglia).
 
 % Ricerca in profondità limitata.
 depth_limit_search(Soluzione, Soglia):-
