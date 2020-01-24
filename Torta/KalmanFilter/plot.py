@@ -3,55 +3,63 @@ import os
 import matplotlib.pyplot as plt
 import csv
 from numpy import double
+import statistics as st
 
 pathRisultati = (os.path.join(os.getcwd(), "Risultati"))
 
 nameFile = []
 
 
-def plotPosizione():
+def plotVelocita():
     # posizione
     plt.clf()
-    plt.plot(pos)
-    plt.plot(posK)
-    plt.title('Posizione')
-    plt.xlabel('Stato')
-    plt.legend(['stimata', 'kalman'])
-    namePNG = nameFile + 'posizione.png'
-    plt.savefig(os.path.join(path_sub, namePNG))
-    plt.clf()
-    # plt.show()
-
-
-def plotVelocita():
-    # velocità
-    plt.clf()
-    plt.plot(vel)
-    plt.plot(velK)
+    plt.plot(velX, linewidth=2)
+    plt.plot(velX_K, linestyle='dashed', linewidth=2)
+    plt.plot(velY, linewidth=2)
+    plt.plot(velY_K, linestyle='dashed', linewidth=2)
     plt.title('Velocità')
     plt.xlabel('Stato')
-    plt.legend(['stimata', 'kalman'])
+    plt.legend(['VelocitàX', 'VelocitàX Kalman', 'VelocitàY', 'VelocitàY Kalman'])
     namePNG = nameFile + 'velocita.png'
     plt.savefig(os.path.join(path_sub, namePNG))
     plt.clf()
 
 
-def plotErrorePos():
-    # ErrorePos
+def plotPosizione():
     plt.clf()
-    plt.plot(errPos)
-    plt.title('Errore Posizione')
-    namePNG = nameFile + 'err_pos.png'
+    plt.plot(posX, linewidth=2)
+    plt.plot(posX_K, linestyle='dashed', linewidth=2)
+    plt.plot(posY, linewidth=2)
+    plt.plot(posY_K, linestyle='dashed', linewidth=2)
+    plt.title('Posizione')
+    plt.xlabel('Stato')
+    plt.legend(['PosizioneX', 'PosizioneX Kalman', 'PosizioneY', 'PosizioneY Kalman'])
+    namePNG = nameFile + 'posizione.png'
     plt.savefig(os.path.join(path_sub, namePNG))
+    plt.clf()
     plt.clf()
 
 
 def plotErroreVel():
-    # ErroreVel
     plt.clf()
-    plt.plot(errVel)
-    plt.title('Errore Velocita')
-    namePNG = nameFile + 'err_vel.png'
+    plt.plot(errVelX, linewidth=2)
+    plt.plot(errVelY, linewidth=2)
+    plt.title('Errore Velocità')
+    plt.xlabel('Stato')
+    plt.legend(['Errore Velocità X', 'Errore Velocità Y'])
+    namePNG = nameFile + 'errore_velocita.png'
+    plt.savefig(os.path.join(path_sub, namePNG))
+    plt.clf()
+
+
+def plotErrorePos():
+    plt.clf()
+    plt.plot(errPosX, linewidth=2)
+    plt.plot(errPosY, linewidth=2)
+    plt.title('Errore Posizione')
+    plt.xlabel('Stato')
+    plt.legend(['Errore Posizione X', 'Errore Posizione Y'])
+    namePNG = nameFile + 'errore_posizione.png'
     plt.savefig(os.path.join(path_sub, namePNG))
     plt.clf()
 
@@ -67,20 +75,6 @@ def plotKalmanGain():
     plt.clf()
 
 
-def plotErrori():
-    # errore sistema vs kalman gain
-    plt.clf()
-    plt.plot(errPos)
-    plt.plot(errVel)
-    plt.plot(kGain)
-    plt.legend(['posizione', 'velocita', 'kalmanGain'])
-    plt.xlabel('Stato')
-    plt.title('Confronto errori e gain')
-    namePNG = nameFile + 'Errori e Kalman Gain.png'
-    plt.savefig(os.path.join(path_sub, namePNG))
-    plt.clf()
-
-
 if __name__ == "__main__":
 
     for root, dirs, _ in os.walk(pathRisultati):
@@ -91,13 +85,19 @@ if __name__ == "__main__":
                 # print(pathFile)
 
                 state = []
-                pos = []
-                posK = []
-                vel = []
-                velK = []
+                velX = []
+                velX_K = []
+                velY = []
+                velY_K = []
+                posX = []
+                posX_K = []
+                posY = []
+                posY_K = []
+                errVelX = []
+                errVelY = []
+                errPosX = []
+                errPosY = []
                 kGain = []
-                errPos = []
-                errVel = []
 
                 with open(filename, "r") as f:
 
@@ -106,17 +106,22 @@ if __name__ == "__main__":
 
                     for row in file:
                         state.append(int(row[0]))
-                        pos.append(double(row[1]))
-                        posK.append(double(row[2]))
-                        vel.append(double(row[3]))
-                        velK.append(double(row[4]))
-                        errPos.append(double(row[5]))
-                        errVel.append(double(row[6]))
-                        kGain.append(double(row[7]))
+                        velX.append(double(row[1]))
+                        velX_K.append(double(row[2]))
+                        velY.append(double(row[3]))
+                        velY_K.append(double(row[4]))
+                        posX.append(double(row[5]))
+                        posX_K.append(double(row[6]))
+                        posY.append(double(row[7]))
+                        posY_K.append(double(row[8]))
+                        errVelX.append(double(row[9]))
+                        errVelY.append(double(row[10]))
+                        errPosX.append(double(row[11]))
+                        errPosY.append(double(row[12]))
+                        kGain.append(double(row[13]))
 
                     plotPosizione()
                     plotVelocita()
                     plotErrorePos()
                     plotErroreVel()
                     plotKalmanGain()
-                    plotErrori()
