@@ -46,7 +46,8 @@ public class ExactInference {
         // Popoliamo la lista delle variabili non map
         Set<RandomVariable> non_map = new HashSet<RandomVariable>();
         for (RandomVariable var : VARS) {
-            if ((!Arrays.asList(map_var).contains(var) && !Arrays.asList(e).contains(var)))
+            //if ((!Arrays.asList(map_var).contains(var) && !Arrays.asList(e).contains(var)))
+            if (!Arrays.asList(map_var).contains(var))
                 non_map.add(var);
         }
 
@@ -54,15 +55,18 @@ public class ExactInference {
         List<Factor> factors = new ArrayList<Factor>();
         for (RandomVariable var : reverse(VARS)) {
             factors.add(0, makeFactor(var, e, bn));
-        }
-
-        // Effettuiamo il sumOut delle variabili non map, ovvero viene effettuato prima il prodotto pointwise tra tutte
-        // le tabelle che contengono la variabile, e poi viene effettuato il sumout sulla tabella risultante
-        for (RandomVariable var : reverse(VARS)) {
             if (non_map.contains(var)) {
                 factors = sumOut(var, factors, bn);
             }
         }
+
+        // Effettuiamo il sumOut delle variabili non map, ovvero viene effettuato prima il prodotto pointwise tra tutte
+        // le tabelle che contengono la variabile, e poi viene effettuato il sumout sulla tabella risultante
+        /*for (RandomVariable var : reverse(VARS)) {
+            if (non_map.contains(var)) {
+                factors = sumOut(var, factors, bn);
+            }
+        }*/
 
         // Effettuiamo il maxout delle variabii map, ovvero prima il prodotto pointwise tra tutte le tabelle che
         // contengono la variabile e poi il maxout sulla tabella risultante
@@ -188,7 +192,7 @@ public class ExactInference {
         Node n = bn.getNode(var);
         if (!(n instanceof FiniteNode)) {
             throw new IllegalArgumentException(
-                    "Elimination-Ask only works with finite Nodes.");
+                    "The algorithm only works with finite Nodes.");
         }
         FiniteNode fn = (FiniteNode) n;
         List<AssignmentProposition> evidence = new ArrayList<AssignmentProposition>();
